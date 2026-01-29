@@ -1,0 +1,4 @@
+apscheduler==3.11.2
+Django==6.0.1
+django_apscheduler==0.7.0
+pytz==2025.2

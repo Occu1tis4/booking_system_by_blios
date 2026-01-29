@@ -1,0 +1,445 @@
+{% extends "app/base_user.html" %}
+
+{% block title %}公告{% endblock %}
+
+{% block content %}
+<div class="announcement-list-container">
+    <!-- 返回按钮 - 独立 -->
+    <div class="back-btn-container">
+        <a href="{% url 'index' %}" class="back-btn">
+            ← 返回
+        </a>
+    </div>
+    
+    <!-- 标题区域 - 独立 -->
+    <div class="page-title-container">
+        <h1 class="page-main-title">系统公告</h1>
+        <div class="page-subtitle">及时了解最新通知与更新</div>
+    </div>
+    
+    <!-- 未读公告提示 -->
+    {% if unread_count > 0 %}
+    <div class="unread-notice">
+        <span class="unread-count-badge">{{ unread_count }} 条未读</span>
+        有新公告发布，请及时查看
+    </div>
+    {% endif %}
+    
+    <!-- 公告列表 -->
+    <div class="announcements-container">
+        {% if announcements %}
+            {% for announcement in announcements %}
+            <div class="announcement-item {% if announcement.is_unread %}unread{% endif %}">
+                <div class="announcement-item-header">
+                    <div class="announcement-item-title">
+                        {{ announcement.title }}
+                        {% if announcement.is_unread %}
+                        <span class="unread-dot"></span>
+                        {% endif %}
+                    </div>
+                    <div class="announcement-item-time">
+                        {{ announcement.created_at|date:"Y-m-d H:i" }}
+                    </div>
+                </div>
+                
+                <div class="announcement-item-content">
+                    {{ announcement.content|linebreaks }}
+                </div>
+                
+                <div class="announcement-item-footer">
+                    <div class="announcement-item-author">
+                        伯里欧斯
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-announcements">
+                <div class="empty-icon">📢</div>
+                <div class="empty-text">暂无系统公告</div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    .announcement-list-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    /* 返回按钮容器 */
+    .back-btn-container {
+        margin-bottom: 15px;
+    }
+    
+    /* 返回按钮 */
+    .back-btn {
+        background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        max-width: 120px;
+    }
+    
+    .back-btn:hover {
+        background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+        transform: translateX(-2px) translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    }
+    
+    /* 标题区域 - 独立白色背景块 */
+    .page-title-container {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 249, 250, 0.95) 100%);
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        border-left: 5px solid #667eea;
+        border-right: 5px solid #764ba2;
+        position: relative;
+        overflow: hidden;
+        padding: 20px 25px;
+        margin-bottom: 25px;
+    }
+    
+    .page-title-container::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: linear-gradient(90deg, 
+            #667eea 0%, 
+            #764ba2 50%, 
+            #ff4757 100%);
+        background-size: 200% 100%;
+        animation: gradientShift 3s ease-in-out infinite alternate;
+    }
+    
+    @keyframes gradientShift {
+        0% { background-position: 0% 50%; }
+        100% { background-position: 100% 50%; }
+    }
+    
+    .page-main-title {
+        margin: 0;
+        font-size: 28px;
+        font-weight: 800;
+        color: #2d3748;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        background: linear-gradient(135deg, #2d3748 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        position: relative;
+        z-index: 2;
+    }
+    
+    .page-main-title::before {
+        content: "📢";
+        font-size: 28px;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.2));
+    }
+    
+    .page-subtitle {
+        color: #718096;
+        font-size: 16px;
+        margin-top: 8px;
+        font-weight: 500;
+        padding-left: 45px;
+        position: relative;
+        z-index: 2;
+    }
+    
+    /* 未读公告提示 */
+    .unread-notice {
+        background: linear-gradient(135deg, #ff6b6b 0%, #ff4757 100%);
+        color: white;
+        padding: 12px 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        animation: slideIn 0.5s ease-out;
+        box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+        border-left: 4px solid #ffdd59;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .unread-notice::before {
+        content: "";
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 100px;
+        height: 200px;
+        background: rgba(255, 255, 255, 0.1);
+        transform: rotate(45deg);
+    }
+    
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .unread-count-badge {
+        background: white;
+        color: #ff4757;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 800;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        border: 2px solid rgba(255, 255, 255, 0.5);
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+    
+    /* 公告列表 */
+    .announcements-container {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+    
+    .announcement-item {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        border-left: 5px solid #4a5568;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .announcement-item::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 5px;
+        height: 100%;
+        background: inherit;
+        border-radius: 5px 0 0 5px;
+    }
+    
+    .announcement-item.unread {
+        border-left: 5px solid #ff4757;
+        animation: highlight 3s ease-in-out infinite alternate;
+        background: linear-gradient(135deg, #fff 0%, #fff9f9 100%);
+    }
+    
+    @keyframes highlight {
+        0% { 
+            box-shadow: 0 4px 15px rgba(255, 71, 87, 0.2); 
+            transform: translateY(0);
+        }
+        50% { 
+            box-shadow: 0 6px 20px rgba(255, 71, 87, 0.3);
+            transform: translateY(-1px);
+        }
+        100% { 
+            box-shadow: 0 4px 15px rgba(255, 71, 87, 0.2);
+            transform: translateY(0);
+        }
+    }
+    
+    .announcement-item:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+    
+    .announcement-item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 15px;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    
+    .announcement-item-title {
+        font-size: 20px;
+        font-weight: 700;
+        color: #2d3748;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .unread-dot {
+        width: 10px;
+        height: 10px;
+        background: #ff4757;
+        border-radius: 50%;
+        animation: pulse 1.5s infinite;
+        box-shadow: 0 0 10px rgba(255, 71, 87, 0.7);
+    }
+    
+    .announcement-item-time {
+        font-size: 14px;
+        color: #718096;
+        white-space: nowrap;
+        background: #f7fafc;
+        padding: 5px 12px;
+        border-radius: 15px;
+        font-weight: 600;
+        border: 1px solid #e2e8f0;
+    }
+    
+    .announcement-item-content {
+        color: #4a5568;
+        line-height: 1.7;
+        margin-bottom: 20px;
+        font-size: 16px;
+        padding: 15px;
+        background: #f8fafc;
+        border-radius: 8px;
+        border-left: 3px solid #cbd5e0;
+    }
+    
+    .announcement-item-footer {
+        border-top: 1px solid #e2e8f0;
+        padding-top: 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 14px;
+        color: #718096;
+    }
+    
+    .announcement-item-author {
+        font-weight: 600;
+        color: #764ba2;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .empty-announcements {
+        text-align: center;
+        padding: 80px 20px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        margin-top: 20px;
+        border: 2px dashed #e2e8f0;
+        transition: all 0.3s ease;
+    }
+    
+    .empty-announcements:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        border-color: #cbd5e0;
+    }
+    
+    .empty-icon {
+        font-size: 72px;
+        color: #cbd5e0;
+        margin-bottom: 20px;
+        opacity: 0.8;
+    }
+    
+    .empty-text {
+        color: #718096;
+        font-size: 20px;
+        font-weight: 600;
+    }
+    
+    /* 响应式调整 */
+    @media (max-width: 768px) {
+        .announcement-list-container {
+            padding: 15px;
+        }
+        
+        .page-title-container {
+            padding: 18px 20px;
+        }
+        
+        .page-main-title {
+            font-size: 24px;
+            gap: 12px;
+        }
+        
+        .page-subtitle {
+            padding-left: 42px;
+            font-size: 15px;
+        }
+        
+        .back-btn {
+            padding: 7px 14px;
+            font-size: 13px;
+            max-width: 110px;
+        }
+        
+        .announcement-item-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .announcement-item-time {
+            align-self: flex-start;
+        }
+        
+        .announcement-item-content {
+            font-size: 15px;
+            padding: 12px;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .page-main-title {
+            font-size: 20px;
+        }
+        
+        .page-subtitle {
+            padding-left: 0;
+            font-size: 14px;
+        }
+        
+        .back-btn {
+            max-width: 100px;
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+        
+        .announcement-item {
+            padding: 16px 12px;
+        }
+        
+        .announcement-item-title {
+            font-size: 18px;
+        }
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,777 @@
+{% extends "app/base_user.html" %}
+
+{% block title %}{{ profile.name }} - 档案详情{% endblock %}
+
+{% block extra_css %}
+<style>
+    .back-btn {
+        background: var(--secondary-color);
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        border-radius: var(--border-radius);
+        font-size: 16px;
+        cursor: pointer;
+        transition: var(--transition);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+        margin-bottom: 20px;
+    }
+    
+    .back-btn:hover {
+        background: #2980b9;
+    }
+    
+    /* 档案头部信息 */
+    .profile-header-card {
+        background: var(--card-bg);
+        border-radius: var(--border-radius);
+        padding: 25px;
+        box-shadow: var(--shadow);
+        margin-bottom: 25px;
+    }
+    
+    .profile-name {
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--dark-text);
+        margin: 0 0 15px 0;
+        padding-bottom: 15px;
+        border-bottom: 2px solid var(--light-bg);
+    }
+    
+    .profile-notes {
+        color: var(--dark-text);
+        line-height: 1.6;
+        font-size: 16px;
+        margin: 0;
+    }
+    
+    /* 时间筛选区域 */
+    .time-filter-card {
+        background: var(--card-bg);
+        border-radius: var(--border-radius);
+        padding: 20px;
+        box-shadow: var(--shadow);
+        margin-bottom: 25px;
+    }
+    
+    .filter-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--dark-text);
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .filter-form {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    
+    .filter-select {
+        padding: 10px 15px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 14px;
+        color: var(--dark-text);
+        background: white;
+        min-width: 150px;
+    }
+    
+    .filter-btn {
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+    
+    .filter-btn:hover {
+        background: #27ae60;
+    }
+    
+    .clear-filter-btn {
+        background: var(--light-bg);
+        color: var(--light-text);
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: var(--transition);
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .clear-filter-btn:hover {
+        background: #e0e0e0;
+    }
+    
+    /* 记录列表 */
+    .records-card {
+        background: var(--card-bg);
+        border-radius: var(--border-radius);
+        padding: 25px;
+        box-shadow: var(--shadow);
+        margin-bottom: 25px;
+    }
+    
+    .records-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid var(--light-bg);
+    }
+    
+    .records-title {
+        font-size: 20px;
+        font-weight: 600;
+        color: var(--dark-text);
+        margin: 0;
+    }
+    
+    .record-count {
+        font-size: 14px;
+        color: var(--light-text);
+        background: var(--light-bg);
+        padding: 4px 12px;
+        border-radius: 12px;
+    }
+    
+    .records-list {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .record-item {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        border-left: 4px solid #2ecc71;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        transition: var(--transition);
+    }
+    
+    .record-item:hover {
+        transform: translateX(5px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .record-item.doctor_public {
+        border-left-color: #3498db;
+    }
+    
+    .record-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+    }
+    
+    .record-type {
+        font-size: 12px;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-weight: 600;
+        background: var(--light-bg);
+        color: var(--light-text);
+    }
+    
+    .record-date {
+        font-size: 14px;
+        color: var(--light-text);
+    }
+    
+    .record-content {
+        color: var(--dark-text);
+        line-height: 1.6;
+        font-size: 14px;
+        margin-bottom: 10px;
+    }
+    
+    .record-creator {
+        font-size: 12px;
+        color: var(--light-text);
+        font-style: italic;
+    }
+    
+    .empty-records {
+        text-align: center;
+        padding: 40px 20px;
+        color: var(--light-text);
+    }
+    
+    /* 添加记录表单 */
+    .add-record-card {
+        background: var(--card-bg);
+        border-radius: var(--border-radius);
+        padding: 25px;
+        box-shadow: var(--shadow);
+        margin-top: 25px;
+    }
+    
+    .add-record-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--dark-text);
+        margin-bottom: 20px;
+    }
+    
+    .record-form {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .form-label {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--dark-text);
+    }
+    
+    .form-textarea {
+        width: 100%;
+        padding: 12px 15px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 14px;
+        color: var(--dark-text);
+        min-height: 120px;
+        resize: vertical;
+        line-height: 1.5;
+    }
+    
+    .form-textarea:focus {
+        outline: none;
+        border-color: var(--primary-color);
+    }
+    
+    .submit-btn {
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 6px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: var(--transition);
+        align-self: flex-start;
+    }
+    
+    .submit-btn:hover {
+        background: #27ae60;
+        transform: translateY(-2px);
+    }
+    
+    /* 消息提示 */
+    .messages {
+        margin-bottom: 20px;
+    }
+    
+    .message {
+        padding: 15px;
+        border-radius: var(--border-radius);
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        animation: slideIn 0.3s ease;
+    }
+    
+    .message.success {
+        background: #d4edda;
+        color: #155724;
+        border-left: 4px solid var(--primary-color);
+    }
+    
+    .message.error {
+        background: #f8d7da;
+        color: #721c24;
+        border-left: 4px solid var(--danger-color);
+    }
+    
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* 响应式调整 */
+    @media (max-width: 768px) {
+        .filter-form {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .filter-select {
+            width: 100%;
+        }
+        
+        .filter-btn,
+        .clear-filter-btn {
+            width: 100%;
+            text-align: center;
+        }
+    }
+    .profile-notes {
+        color: var(--dark-text);
+        line-height: 1.6;
+        font-size: 16px;
+        margin: 0;
+        /* 确保长字符串可以换行 */
+        word-wrap: break-word;      /* 旧版支持 */
+        word-break: break-word;     /* 确保长单词换行 */
+        overflow-wrap: break-word;  /* 标准属性 */
+        hyphens: auto;              /* 在合适的位置添加连字符 */
+        white-space: pre-wrap;      /* 保留空白符序列，但正常换行 */
+        /* 确保容器宽度不会导致溢出 */
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+    
+    /* 记录内容样式 - 修复长字符串换行问题 */
+    .record-content {
+        color: var(--dark-text);
+        line-height: 1.6;
+        font-size: 14px;
+        margin-bottom: 10px;
+        /* 确保长字符串可以换行 */
+        word-wrap: break-word;      /* 旧版支持 */
+        word-break: break-word;     /* 确保长单词换行 */
+        overflow-wrap: break-word;  /* 标准属性 */
+        hyphens: auto;              /* 在合适的位置添加连字符 */
+        white-space: pre-wrap;      /* 保留空白符序列，但正常换行 */
+        /* 确保容器宽度不会导致溢出 */
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+    
+    /* 表单文本区域也要处理长字符串 */
+    .form-textarea {
+        width: 100%;
+        padding: 12px 15px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 14px;
+        color: var(--dark-text);
+        min-height: 120px;
+        resize: vertical;
+        line-height: 1.5;
+        /* 确保文本区域也能正确处理长字符串 */
+        word-wrap: break-word;
+        white-space: pre-wrap;
+        overflow-wrap: break-word;
+    }
+    
+    /* 为记录项添加最小高度，确保内容展示 */
+    .record-item {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        border-left: 4px solid #2ecc71;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        transition: var(--transition);
+        /* 确保内部布局正常 */
+        min-height: 80px;
+        overflow: hidden;
+    }
+    
+    .record-item.doctor_public {
+        border-left-color: #3498db;
+    }
+    
+    /* 时间筛选选择框也要处理长日期 */
+    .filter-select {
+        padding: 10px 15px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 14px;
+        color: var(--dark-text);
+        background: white;
+        min-width: 150px;
+        /* 确保长选项也能显示 */
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    /* 确保消息提示也能正确处理长文本 */
+    .message {
+        padding: 15px;
+        border-radius: var(--border-radius);
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        animation: slideIn 0.3s ease;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        max-width: 100%;
+    }
+    
+    /* 响应式调整 */
+    @media (max-width: 768px) {
+        /* 移动端更需要正确处理长字符串 */
+        .profile-notes,
+        .record-content {
+            word-break: break-all;  /* 移动端更激进的换行策略 */
+            overflow-wrap: anywhere;
+        }
+        
+        .record-item {
+            padding: 15px;
+        }
+    }
+    
+    /* 新增：专门处理超长连续字符串的类 */
+    .break-anywhere {
+        word-break: break-all;           /* 非常激进的换行：在任何字符处换行 */
+        overflow-wrap: anywhere;         /* 更现代的任意位置换行 */
+        word-wrap: break-word;           /* 向后兼容 */
+    }
+    
+    /* 新增：在内容区域添加水平滚动条，而不是溢出隐藏（可选） */
+    .scrollable-content {
+        max-width: 100%;
+        overflow-x: auto;                /* 水平滚动 */
+        white-space: pre-wrap;           /* 保留空白符但允许换行 */
+        padding-bottom: 5px;             /* 给滚动条一点空间 */
+    }
+    
+    .scrollable-content::-webkit-scrollbar {
+        height: 6px;
+    }
+    
+    .scrollable-content::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 3px;
+    }
+    
+    .scrollable-content::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 3px;
+    }
+    
+    .scrollable-content::-webkit-scrollbar-thumb:hover {
+        background: #a8a8a8;
+    }
+
+    .urge-btn-container {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        z-index: 10;
+    }
+    
+    .urge-btn {
+        padding: 8px 16px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background: white;
+        color: #333;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.2s;
+    }
+    
+    .urge-btn:hover {
+        background: #f5f5f5;
+    }
+    
+    .urge-btn.urged {
+        background: #ff6b6b;
+        color: white;
+        border-color: #ff6b6b;
+    }
+    
+    .urge-btn.urged:hover {
+        background: #ff5252;
+    }
+    
+    /* 为档案头部卡片添加相对定位 */
+    .profile-header-card {
+        position: relative;
+        background: var(--card-bg);
+        border-radius: var(--border-radius);
+        padding: 25px;
+        box-shadow: var(--shadow);
+        margin-bottom: 25px;
+    }
+    
+    /* 调整档案名称位置，给催促按钮留出空间 */
+    .profile-name {
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--dark-text);
+        margin: 0 0 15px 0;
+        padding-bottom: 15px;
+        border-bottom: 2px solid var(--light-bg);
+        padding-right: 120px;
+    }
+    
+    /* 响应式调整 */
+    @media (max-width: 768px) {
+        .urge-btn-container {
+            position: static;
+            margin-bottom: 15px;
+        }
+        
+        .profile-name {
+            padding-right: 0;
+        }
+    }
+    .add-record-card {
+        background: var(--card-bg);
+        border-radius: var(--border-radius);
+        padding: 25px;
+        box-shadow: var(--shadow);
+        margin-top: 20px;           /* 添加上边距 */
+        margin-bottom: 25px;        /* 添加下边距，与筛选卡片分开 */
+    }
+    
+    /* 时间筛选卡片 */
+    .time-filter-card {
+        background: var(--card-bg);
+        border-radius: var(--border-radius);
+        padding: 20px;
+        box-shadow: var(--shadow);
+        margin-top: 20px;           /* 确保上边距 */
+        margin-bottom: 25px;        /* 与记录列表卡片保持距离 */
+    }
+    
+    /* 记录列表卡片 */
+    .records-card {
+        background: var(--card-bg);
+        border-radius: var(--border-radius);
+        padding: 25px;
+        box-shadow: var(--shadow);
+        margin-top: 20px;           /* 确保上边距 */
+        margin-bottom: 25px;        /* 与页面底部保持距离 */
+    }
+    
+    /* 档案头部卡片 - 已存在，确保有下边距 */
+    .profile-header-card {
+        position: relative;
+        background: var(--card-bg);
+        border-radius: var(--border-radius);
+        padding: 25px;
+        box-shadow: var(--shadow);
+        margin-bottom: 25px;        /* 已存在，与添加记录卡片分开 */
+    }
+    
+    /* 或者，如果你想要所有卡片之间的间距更统一，可以使用以下更简洁的方法： */
+    
+    /* 统一所有内容卡片的间距 */
+    .content-card {
+        background: var(--card-bg);
+        border-radius: var(--border-radius);
+        padding: 20px 25px;
+        box-shadow: var(--shadow);
+        margin: 20px 0;             /* 上下边距20px */
+    }
+    
+    /* 为不同类型的卡片微调内边距 */
+    .content-card.profile-header {
+        padding: 25px;
+        margin-bottom: 30px;        /* 头部卡片稍大一些的下边距 */
+    }
+    
+    .content-card.add-record {
+        margin: 25px 0 30px 0;      /* 添加记录卡片上下边距 */
+    }
+    
+    .content-card.time-filter {
+        padding: 20px;
+        margin: 20px 0;             /* 筛选卡片上下边距 */
+    }
+    
+    .content-card.records {
+        padding: 25px;
+        margin: 25px 0 30px 0;      /* 记录列表卡片上下边距 */
+    }
+    
+    /* 响应式调整：在小屏幕上减少间距 */
+    @media (max-width: 768px) {
+        .add-record-card,
+        .time-filter-card,
+        .records-card,
+        .profile-header-card {
+            margin: 15px 0;         /* 移动端减少间距 */
+            padding: 20px 15px;     /* 移动端减少内边距 */
+        }
+        
+        .content-card {
+            margin: 15px 0;
+            padding: 15px;
+        }
+        
+        .profile-header-card {
+            margin-bottom: 20px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+    <!-- 返回按钮 -->
+    <a href="{% url 'view_my_profile' %}" class="back-btn">← 返回档案列表</a>
+    
+    <!-- 消息提示 -->
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+        <div class="message {{ message.tags }}">
+            {% if message.tags == 'success' %}
+            ✅
+            {% elif message.tags == 'error' %}
+            ❌
+            {% endif %}
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    <!-- 档案头部信息 -->
+    <div class="profile-header-card">
+        <!-- 催促按钮 -->
+        {% if show_urge_button %}
+        <div class="urge-btn-container">
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="toggle_urge" value="1">
+                <button type="submit" class="urge-btn {% if profile.is_urged %}urged{% endif %}">
+                    {% if profile.is_urged %}
+                    取消期待回复
+                    {% else %}
+                    期待回复
+                    {% endif %}
+                </button>
+            </form>
+        </div>
+        {% endif %}
+        <h1 class="profile-name">{{ profile.name }}</h1>
+        {% if profile.notes %}
+        <p class="profile-notes">{{ profile.notes }}</p>
+        {% else %}
+        <p class="profile-notes" style="color: var(--light-text); font-style: italic;">暂无备注</p>
+        {% endif %}
+    </div>
+
+    <!-- 添加记录表单 -->
+    <div class="add-record-card">
+        <h3 class="add-record-title">✍️ 添加新记录</h3>
+        <form method="post" class="record-form">
+            {% csrf_token %}
+            <input type="hidden" name="add_record" value="1">
+            
+            <div class="form-group">
+                <label for="content" class="form-label">记录内容</label>
+                <textarea 
+                    name="content" 
+                    id="content" 
+                    class="form-textarea" 
+                    placeholder="请输入您的记录内容..." 
+                    required
+                ></textarea>
+            </div>
+            
+            <button type="submit" class="submit-btn">保存记录</button>
+        </form>
+    </div>
+    
+    <!-- 时间筛选区域 -->
+    <div class="time-filter-card">
+        <div class="filter-title">
+            <span>⏰</span> 按月筛选
+        </div>
+        <form method="get" class="filter-form">
+            <select name="month" class="filter-select">
+                <option value="">所有月份</option>
+                {% for month in month_choices %}
+                <option value="{{ month.value }}" 
+                    {% if month_filter == month.value %}selected{% endif %}>
+                    {{ month.display }}
+                </option>
+                {% endfor %}
+            </select>
+            
+            <button type="submit" class="filter-btn">筛选</button>
+            
+            {% if month_filter %}
+            <a href="{% url 'patient_profile_detail' profile.id %}" class="clear-filter-btn">
+                清除筛选
+            </a>
+            {% endif %}
+        </form>
+    </div>
+    
+    <!-- 记录列表 -->
+    <div class="records-card">
+        <div class="records-header">
+            <h2 class="records-title">📝 记录时间线</h2>
+            <div class="record-count">{{ records.count }} 条记录</div>
+        </div>
+        
+        {% if records %}
+        <div class="records-list">
+            {% for record in records %}
+            <div class="record-item {{ record.record_type }}">
+                <div class="record-header">
+                    <div class="record-type">
+                        {% if record.record_type == 'user' %}
+                        访客记录
+                        {% else %}
+                        伯里欧斯记录
+                        {% endif %}
+                    </div>
+                    <div class="record-date">{{ record.created_at|date:"Y-m-d H:i" }}</div>
+                </div>
+                <div class="record-content">{{ record.content|linebreaksbr }}</div>
+                <div class="record-creator">
+                    {% if record.record_type == 'user' %}
+                    由您记录
+                    {% else %}
+                    由伯里欧斯记录
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-records">
+            {% if date_filter %}
+            <div style="font-size: 16px; margin-bottom: 10px;">该时间段暂无记录</div>
+            <div style="color: var(--light-text);">请选择其他时间或查看所有记录</div>
+            {% else %}
+            <div style="font-size: 16px; margin-bottom: 10px;">暂无记录</div>
+            <div style="color: var(--light-text);">添加第一条记录开始您的健康档案</div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+{% endblock %}

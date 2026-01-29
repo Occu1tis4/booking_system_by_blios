@@ -1,0 +1,315 @@
+{% extends "app/base_user.html" %}
+
+{% block title %}创建预约{% endblock %}
+
+{% block extra_css %}
+<style>
+    .back-btn {
+        background: var(--secondary-color);
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        border-radius: var(--border-radius);
+        font-size: 16px;
+        cursor: pointer;
+        transition: var(--transition);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+        margin-bottom: 20px;
+    }
+    
+    .back-btn:hover {
+        background: #2980b9;
+    }
+    
+    .form-card {
+        background: var(--card-bg);
+        border-radius: var(--border-radius);
+        padding: 25px;
+        box-shadow: var(--shadow);
+    }
+    
+    .form-title {
+        font-size: 22px;
+        font-weight: 600;
+        margin-bottom: 25px;
+        color: var(--dark-text);
+        text-align: center;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: var(--dark-text);
+        font-size: 15px;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 16px;
+        transition: var(--transition);
+        background: var(--light-bg);
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        background: white;
+    }
+    
+    textarea.form-control {
+        min-height: 120px;
+        resize: vertical;
+    }
+    
+    .form-hint {
+        font-size: 13px;
+        color: var(--light-text);
+        margin-top: 5px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    
+    .form-hint .icon {
+        color: var(--warning-color);
+    }
+    
+    .submit-btn {
+        width: 100%;
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        padding: 16px;
+        border-radius: 8px;
+        font-size: 18px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+        margin-top: 20px;
+    }
+    
+    .submit-btn:hover {
+        background: #27ae60;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(46, 204, 113, 0.4);
+    }
+    
+    .submit-btn:disabled {
+        background: #95a5a6;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    .priority-options {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+        margin-top: 10px;
+    }
+    
+    .priority-option {
+        text-align: center;
+        padding: 12px 5px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: var(--transition);
+        font-size: 14px;
+    }
+    
+    .priority-option:hover {
+        border-color: var(--secondary-color);
+    }
+    
+    .priority-option.selected {
+        border-color: var(--primary-color);
+        background: rgba(46, 204, 113, 0.1);
+        font-weight: 600;
+    }
+    
+    .priority-1 { border-left-color: #2ecc71; }
+    .priority-2 { border-left-color: #f39c12; }
+    .priority-3 { border-left-color: #e74c3c; }
+    .priority-4 { border-left-color: #c0392b; }
+    
+    /* 状态提示 */
+    .status-card {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: var(--border-radius);
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .status-title {
+        color: #856404;
+        font-weight: 600;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .status-content {
+        color: #856404;
+        font-size: 14px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+    <!-- 返回按钮 -->
+    <a href="{% url 'index' %}" class="back-btn">← 返回首页</a>
+    
+    {% if unfinished_count >= 3 %}
+    <!-- 已达上限提示 -->
+    <div class="status-card">
+        <div class="status-title">⚠️ 无法创建新预约</div>
+        <div class="status-content">
+            您目前有 {{ unfinished_count }} 个未处理预约，已达上限（3个）。<br>
+            请等待部分预约处理完成或明天再试。
+        </div>
+    </div>
+    {% else %}
+    <!-- 创建预约表单 -->
+    <div class="form-card">
+        <div class="form-title">创建新预约</div>
+        
+        {% if error %}
+        <div class="message error">
+            ❌ {{ error }}
+        </div>
+        {% endif %}
+        
+        <form method="post" id="appointmentForm">
+            {% csrf_token %}
+            
+            <!-- 预约人 -->
+            <div class="form-group">
+                <label class="form-label" for="patient_name">预约人姓名</label>
+                <input type="text" id="patient_name" name="patient_name" 
+                       class="form-control" required placeholder="请输入您的姓名">
+                <div class="form-hint">
+                    <span class="icon">ℹ️</span> 请填写真实姓名以便医师识别，如果没有档案请联系伯里欧斯建档
+                </div>
+            </div>
+            
+            <!-- 需求描述 -->
+            <div class="form-group">
+                <label class="form-label" for="demand">需求描述</label>
+                <textarea id="demand" name="demand" class="form-control" 
+                         required placeholder="请详细描述您的需求..."></textarea>
+                <div class="form-hint">
+                    <span class="icon">💡</span> 描述越详细，医师越能准确理解您的需求
+                </div>
+            </div>
+            
+            <!-- 微信号 -->
+            <div class="form-group">
+                <label class="form-label" for="wechat_id">微信号</label>
+                <input type="text" id="wechat_id" name="wechat_id" 
+                       class="form-control" required placeholder="请输入您的微信号">
+                <div class="form-hint">
+                    <span class="icon">💬</span> 建议添加伯里欧斯的微信：Hypnocculsis
+                </div>
+            </div>
+            
+            <!-- 优先级 -->
+            <div class="form-group">
+                <label class="form-label">优先级</label>
+                <div class="priority-options">
+                    <div class="priority-option priority-1" data-value="1">
+                        <div>低</div>
+                        <div style="font-size: 12px; color: var(--light-text);">普通需求</div>
+                    </div>
+                    <div class="priority-option priority-2" data-value="2">
+                        <div>中</div>
+                        <div style="font-size: 12px; color: var(--light-text);">有点难受</div>
+                    </div>
+                    <div class="priority-option priority-3" data-value="3">
+                        <div>高</div>
+                        <div style="font-size: 12px; color: var(--light-text);">紧急需要</div>
+                    </div>
+                    <div class="priority-option priority-4" data-value="4">
+                        <div>危</div>
+                        <div style="font-size: 12px; color: var(--light-text);">痛不欲生</div>
+                    </div>
+                </div>
+                <input type="hidden" id="priority" name="priority" value="1">
+                <div class="form-hint">
+                    <span class="icon">📋</span> 约线下也请选择"危"，同时在需求中注明线下
+                </div>
+            </div>
+            
+            <!-- 状态信息 -->
+            <div class="status-card">
+                <div class="status-title">📊 预约状态</div>
+                <div class="status-content">
+                    • 您今天还可以创建 {{ daily_creation_left }} 次预约<br>
+                    • 当前未处理预约：{{ unfinished_count }}/3<br>
+                    • 优先级的低不代表最后处理，小助理采取轮转法分配
+                </div>
+            </div>
+            
+            <button type="submit" class="submit-btn" id="submitBtn">
+                提交预约
+            </button>
+        </form>
+    </div>
+    {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 优先级选择
+        const priorityOptions = document.querySelectorAll('.priority-option');
+        const priorityInput = document.getElementById('priority');
+        
+        priorityOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                // 移除所有选中状态
+                priorityOptions.forEach(opt => opt.classList.remove('selected'));
+                // 添加当前选中状态
+                this.classList.add('selected');
+                // 设置值
+                priorityInput.value = this.dataset.value;
+            });
+        });
+        
+        // 默认选中优先级1
+        document.querySelector('.priority-option[data-value="1"]').classList.add('selected');
+        
+        // 表单提交处理
+        const form = document.getElementById('appointmentForm');
+        const submitBtn = document.getElementById('submitBtn');
+        
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '提交中...';
+                
+                // 检查是否已超过限制
+                if ({{ unfinished_count }} >= 3) {
+                    e.preventDefault();
+                    alert('您已有3个未处理预约，无法创建新预约。');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '提交预约';
+                    return false;
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

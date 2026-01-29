@@ -1,0 +1,570 @@
+{% extends "app/base_user.html" %}
+
+{% block title %}修改预约{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* 覆盖base_user的body背景 */
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    }
+    
+    .back-btn {
+        background: var(--secondary-color);
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        border-radius: var(--border-radius);
+        font-size: 16px;
+        cursor: pointer;
+        transition: var(--transition);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+        margin-bottom: 20px;
+    }
+    
+    .back-btn:hover {
+        background: #2980b9;
+    }
+    
+    .update-card {
+        background: var(--card-bg);
+        border-radius: var(--border-radius);
+        padding: 30px;
+        box-shadow: var(--shadow);
+    }
+    
+    .update-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid var(--light-bg);
+    }
+    
+    .header-icon {
+        width: 50px;
+        height: 50px;
+        background: var(--primary-color);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 24px;
+        margin-right: 15px;
+        flex-shrink: 0;
+    }
+    
+    .header-title {
+        font-size: 22px;
+        font-weight: 600;
+        color: var(--dark-text);
+        margin-bottom: 5px;
+    }
+    
+    .header-subtitle {
+        color: var(--light-text);
+        font-size: 14px;
+    }
+    
+    /* 预约信息卡片 */
+    .info-card {
+        background: var(--light-bg);
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 25px;
+        border-left: 4px solid var(--secondary-color);
+    }
+    
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+    
+    .info-item {
+        font-size: 14px;
+    }
+    
+    .info-label {
+        color: var(--light-text);
+        font-size: 12px;
+        margin-bottom: 3px;
+    }
+    
+    .info-value {
+        font-weight: 500;
+        word-break: break-word;
+    }
+    
+    /* 状态徽章 */
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+        color: white;
+        margin-top: 5px;
+    }
+    
+    .status-processing { background: var(--primary-color); }
+    .status-responded { background: var(--secondary-color); }
+    .status-waiting { background: #95a5a6; }
+    
+    /* 表单样式 */
+    .form-group {
+        margin-bottom: 25px;
+        position: relative;
+    }
+    
+    .form-label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 10px;
+        color: var(--dark-text);
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 16px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 16px;
+        transition: var(--transition);
+        background: var(--light-bg);
+        line-height: 1.5;
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        background: white;
+        box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.1);
+    }
+    
+    textarea.form-control {
+        min-height: 150px;
+        resize: vertical;
+    }
+    
+    .form-hint {
+        font-size: 13px;
+        color: var(--light-text);
+        margin-top: 8px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    
+    /* 按钮组 */
+    .button-group {
+        display: flex;
+        gap: 15px;
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid #eee;
+    }
+    
+    .btn {
+        flex: 1;
+        padding: 16px;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+    
+    .btn-primary {
+        background: var(--primary-color);
+        color: white;
+    }
+    
+    .btn-primary:hover:not(:disabled) {
+        background: #27ae60;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(46, 204, 113, 0.4);
+    }
+    
+    .btn-secondary {
+        background: var(--light-bg);
+        color: var(--dark-text);
+        border: 2px solid #e0e0e0;
+    }
+    
+    .btn-secondary:hover {
+        background: #e0e0e0;
+        transform: translateY(-2px);
+    }
+    
+    .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none !important;
+        box-shadow: none !important;
+    }
+    
+    /* 禁用状态覆盖层 */
+    .field-disabled-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(245, 245, 245, 0.7);
+        cursor: not-allowed;
+        z-index: 10;
+        border-radius: 8px;
+    }
+    
+    /* 警告卡片 */
+    .warning-card {
+        background: #fff3cd;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 25px;
+        border-left: 4px solid var(--warning-color);
+        animation: fadeIn 0.5s ease;
+    }
+    
+    .warning-title {
+        color: #856404;
+        font-weight: 600;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .warning-content {
+        color: #856404;
+        font-size: 14px;
+        line-height: 1.5;
+    }
+    
+    /* 成功卡片 */
+    .success-card {
+        background: #d4edda;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 25px;
+        border-left: 4px solid var(--primary-color);
+        animation: fadeIn 0.5s ease;
+    }
+    
+    .success-title {
+        color: #155724;
+        font-weight: 600;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .success-content {
+        color: #155724;
+        font-size: 14px;
+        line-height: 1.5;
+    }
+    
+    /* 修改次数提示 */
+    .modify-info {
+        background: #e3f2fd;
+        border-radius: 10px;
+        padding: 15px;
+        margin-top: 15px;
+        text-align: center;
+    }
+    
+    .modify-count {
+        font-weight: 600;
+        color: var(--secondary-color);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+    <!-- 返回按钮 -->
+    <a href="{% url 'my_appointments' %}" class="back-btn">← 返回我的预约</a>
+    
+    <div class="update-card">
+        <div class="update-header">
+            <div class="header-icon">✏️</div>
+            <div>
+                <div class="header-title">修改预约信息</div>
+                <div class="header-subtitle">一天仅能修改一次，请谨慎操作</div>
+            </div>
+        </div>
+        
+        <!-- 预约信息卡片 -->
+        <div class="info-card">
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">预约人</div>
+                    <div class="info-value">{{ appointment.patient_name }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">优先级</div>
+                    <div class="info-value">{{ appointment.get_priority_display }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">创建时间</div>
+                    <div class="info-value">{{ appointment.created_at|date:"Y-m-d H:i" }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">当前状态</div>
+                    <div class="info-value">
+                        {% if appointment.is_processed %}
+                            <span class="status-badge status-processing">已处理</span>
+                        {% elif appointment.is_responded %}
+                            <span class="status-badge status-responded">已回应</span>
+                        {% else %}
+                            <span class="status-badge status-waiting">等待回应</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            {% if appointment.last_modified_at %}
+            <div style="font-size: 13px; color: var(--light-text);">
+                📝 上次修改：{{ appointment.last_modified_at|date:"Y-m-d H:i" }}
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- 状态检查 -->
+        {% if appointment.is_processed %}
+            <div class="warning-card">
+                <div class="warning-title">⚠️ 无法修改</div>
+                <div class="warning-content">
+                    此预约已被医师处理完成，信息已锁定。<br>
+                    如需进一步咨询，请创建新的预约。
+                </div>
+                <div style="margin-top: 15px;">
+                    <a href="{% url 'create_appointment' %}" class="btn btn-primary" style="flex: none; padding: 12px 24px;">
+                        创建新预约
+                    </a>
+                </div>
+            </div>
+        {% elif not can_modify %}
+            <div class="warning-card">
+                <div class="warning-title">⚠️ 无法修改</div>
+                <div class="warning-content">
+                    {{ modify_reason }}<br>
+                    每个预约每天只能修改一次，或已超出修改期限。
+                </div>
+            </div>
+        {% endif %}
+        
+        <!-- 修改表单 -->
+        <form method="post" id="updateForm" {% if not can_modify or appointment.is_processed %}onsubmit="return false;"{% endif %}>
+            {% csrf_token %}
+            
+            <!-- 需求描述 -->
+            <div class="form-group">
+                <label class="form-label" for="id_demand">
+                    <span>📝</span>
+                    需求描述
+                </label>
+                <textarea id="id_demand" name="demand" class="form-control" 
+                          placeholder="请详细描述您的需求..."
+                          {% if not can_modify or appointment.is_processed %}readonly{% endif %}>{{ form.demand.value|default:appointment.demand }}</textarea>
+                <div class="form-hint">
+                    <span class="icon">💡</span> 请确保描述准确
+                </div>
+                {% if not can_modify or appointment.is_processed %}
+                    <div class="field-disabled-overlay"></div>
+                {% endif %}
+            </div>
+            
+            <!-- 微信号 -->
+            <div class="form-group">
+                <label class="form-label" for="id_wechat_id">
+                    <span>💬</span>
+                    微信号
+                </label>
+                <input type="text" id="id_wechat_id" name="wechat_id" class="form-control" 
+                       placeholder="请输入您的微信号"
+                       value="{{ form.wechat_id.value|default:appointment.wechat_id }}"
+                       {% if not can_modify or appointment.is_processed %}readonly{% endif %}>
+                <div class="form-hint">
+                    <span class="icon">ℹ️</span> 建议添加伯里欧斯的微信：Hypnocculsis
+                </div>
+                {% if not can_modify or appointment.is_processed %}
+                    <div class="field-disabled-overlay"></div>
+                {% endif %}
+            </div>
+            
+            <!-- 修改提示 -->
+            {% if can_modify and not appointment.is_processed %}
+            <div class="modify-info">
+                <div style="font-weight: 600; color: var(--secondary-color); margin-bottom: 5px;">
+                    ⚠️ 重要提示
+                </div>
+                <div style="font-size: 13px; color: var(--light-text);">
+                    • 修改后无需重新排队<br>
+                    • 每个预约每天只能修改1次<br>
+                    • 请确保信息准确后再提交
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- 按钮组 -->
+            <div class="button-group">
+                {% if can_modify and not appointment.is_processed %}
+                    <button type="submit" class="btn btn-primary" id="submitBtn">
+                        <span>💾</span>
+                        保存修改
+                    </button>
+                {% else %}
+                    <button type="button" class="btn btn-primary" disabled>
+                        <span>🚫</span>
+                        无法保存
+                    </button>
+                {% endif %}
+                
+                <a href="{% url 'my_appointments' %}" class="btn btn-secondary">
+                    <span>←</span>
+                    取消返回
+                </a>
+            </div>
+        </form>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('updateForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const demandTextarea = document.getElementById('id_demand');
+        const wechatInput = document.getElementById('id_wechat_id');
+        
+        // 自动聚焦到需求描述
+        if (demandTextarea && !demandTextarea.readOnly) {
+            demandTextarea.focus();
+            // 移动光标到末尾
+            demandTextarea.setSelectionRange(demandTextarea.value.length, demandTextarea.value.length);
+        }
+        
+        // 表单提交处理
+        if (form && submitBtn) {
+            form.addEventListener('submit', function(e) {
+                // 检查是否可修改
+                {% if not can_modify or appointment.is_processed %}
+                    e.preventDefault();
+                    return false;
+                {% endif %}
+                
+                // 验证表单
+                const demand = demandTextarea.value.trim();
+                const wechat = wechatInput.value.trim();
+                
+                if (!demand) {
+                    e.preventDefault();
+                    showError('需求描述不能为空');
+                    demandTextarea.focus();
+                    return false;
+                }
+                
+                if (!wechat) {
+                    e.preventDefault();
+                    showError('微信号不能为空');
+                    wechatInput.focus();
+                    return false;
+                }
+                
+                if (demand.length < 10) {
+                    e.preventDefault();
+                    showError('需求描述至少需要10个字符');
+                    demandTextarea.focus();
+                    return false;
+                }
+                
+                // 显示确认对话框
+                const confirmed = confirm('⚠️ 确定要修改吗？\n\n修改内容：\n- 需求描述将被更新\n- 微信号将被更新\n\n点击"确定"继续，或"取消"返回。');
+                
+                if (!confirmed) {
+                    e.preventDefault();
+                    return false;
+                }
+                
+                // 显示提交中状态
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="loading"></span> 保存中...';
+                
+                // 防止重复提交
+                form.submit();
+            });
+        }
+        
+        // 显示错误函数
+        function showError(message) {
+            // 移除旧的错误消息
+            const oldError = form.querySelector('.message.error');
+            if (oldError) {
+                oldError.remove();
+            }
+            
+            // 创建新的错误消息
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'message error';
+            errorDiv.innerHTML = '❌ ' + message;
+            errorDiv.style.marginTop = '10px';
+            errorDiv.style.animation = 'fadeIn 0.3s ease';
+            
+            // 添加到表单前
+            form.parentNode.insertBefore(errorDiv, form);
+            
+            // 3秒后自动消失
+            setTimeout(() => {
+                if (errorDiv.parentNode) {
+                    errorDiv.style.animation = 'fadeIn 0.3s ease reverse';
+                    setTimeout(() => errorDiv.remove(), 300);
+                }
+            }, 3000);
+        }
+        
+        // 显示字符计数器
+        if (demandTextarea) {
+            const charCount = document.createElement('div');
+            charCount.className = 'form-hint';
+            charCount.style.textAlign = 'right';
+            charCount.style.marginTop = '5px';
+            
+            function updateCharCount() {
+                const count = demandTextarea.value.length;
+                charCount.innerHTML = count + ' / 最少10个字符';
+                
+                if (count < 10) {
+                    charCount.style.color = 'var(--danger-color)';
+                } else if (count < 50) {
+                    charCount.style.color = 'var(--warning-color)';
+                } else {
+                    charCount.style.color = 'var(--primary-color)';
+                }
+            }
+            
+            demandTextarea.addEventListener('input', updateCharCount);
+            demandTextarea.parentNode.appendChild(charCount);
+            updateCharCount();
+        }
+    });
+</script>
+{% endblock %}

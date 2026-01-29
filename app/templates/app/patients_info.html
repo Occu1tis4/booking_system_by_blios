@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- 手动添加 favicon 代码 -->
+    <link rel="icon" type="image/x-icon" href="{% static 'booking_system/favicon/favicon.ico' %}">
+    <link rel="icon" type="image/svg+xml" href="{% static 'booking_system/favicon/favicon.svg' %}">
+    <link rel="icon" type="image/png" sizes="96x96" href="{% static 'booking_system/favicon/favicon-96x96.png' %}">
+    <link rel="apple-touch-icon" href="{% static 'booking_system/favicon/apple-touch-icon.png' %}">
+    <link rel="manifest" href="{% static 'booking_system/favicon/site.webmanifest' %}">
+    <meta name="theme-color" content="#ffffff">
+
+    <title>档案管理 - 工作台</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+
+        .doctor-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 固定侧边栏 - 与 doctor_all.html 保持一致 */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 250px;
+            height: 100vh;
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px 0;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar h2 {
+            text-align: center;
+            color: #ecf0f1;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #34495e;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar-menu li {
+            margin: 0;
+        }
+
+        .sidebar-menu a {
+            display: block;
+            padding: 15px 25px;
+            color: #ecf0f1;
+            text-decoration: none;
+            transition: all 0.3s;
+            border-left: 4px solid transparent;
+        }
+
+        .sidebar-menu a:hover {
+            background-color: #34495e;
+            border-left: 4px solid #3498db;
+        }
+
+        .sidebar-menu a.active {
+            background-color: #34495e;
+            border-left: 4px solid #2ecc71;  /* 用户档案使用绿色主题 */
+            font-weight: bold;
+        }
+
+        /* 调整主内容区域 */
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            margin-left: 250px; /* 为固定侧边栏留出空间 */
+            min-height: 100vh;
+        }
+
+        .welcome-message {
+            background: white;
+            border-radius: 8px;
+            padding: 12px 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .welcome-message h2 {
+            color: #2c3e50;
+            margin: 0;
+        }
+
+        /* 搜索栏 - 与 doctor_all.html 保持一致 */
+        .search-bar {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .search-bar form {
+            display: flex;
+            gap: 10px;
+        }
+
+        .search-bar input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        .search-bar button {
+            background: #2ecc71;  /* 绿色主题 */
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .search-bar button:hover {
+            background: #27ae60;
+        }
+
+        /* 档案统计 - 改进样式 */
+        .profile-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-item {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+        }
+
+        .stat-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+
+        .stat-total {
+            border-top: 4px solid #3498db;
+        }
+
+        .stat-with-account {
+            border-top: 4px solid #2ecc71;
+        }
+
+        .stat-search-results {
+            border-top: 4px solid #f39c12;
+        }
+
+        .stat-empty {
+            border-top: 4px solid #9b59b6;
+        }
+
+        /* 档案列表 */
+        .profiles-list {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 档案项 - 类似 doctor_all.html 的预约项 */
+        .profile-item {
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 20px;
+            background: #f9f9f9;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .profile-item:hover {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+            transform: translateY(-2px);
+            border-color: #ddd;
+        }
+
+        /* 档案头部信息 - 类似预约头部 */
+        .profile-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .profile-name {
+            font-size: 20px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 0;
+        }
+
+        .profile-meta {
+            text-align: right;
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+
+        .profile-id {
+            display: inline-block;
+            background: #2c3e50;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        /* 档案详情区域 */
+        .profile-details {
+            background: white;
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .detail-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .detail-item {
+            padding: 12px;
+            border-radius: 4px;
+            background: #f8f9fa;
+        }
+
+        .detail-item strong {
+            color: #555;
+            margin-right: 8px;
+            display: inline-block;
+            min-width: 70px;
+        }
+
+        .detail-notes {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 15px;
+            border-left: 3px solid #f39c12;
+        }
+
+        .detail-notes strong {
+            color: #f39c12;
+        }
+
+        /* 操作按钮 */
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: none !important;
+            display: inline-block;
+            transition: all 0.3s;
+        }
+
+        .btn-view {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-view:hover {
+            background: #2980b9;
+            text-decoration: none !important;
+        }
+
+        .btn-edit {
+            background: #f39c12;
+            color: white;
+        }
+
+        .btn-edit:hover {
+            background: #d68910;
+            text-decoration: none !important;
+        }
+
+        .btn-appointments {
+            background: #9b59b6;
+            color: white;
+        }
+
+        .btn-appointments:hover {
+            background: #8e44ad;
+            text-decoration: none !important;
+        }
+
+        .btn-delete {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: #c0392b;
+            text-decoration: none !important;
+        }
+
+        .btn-create {
+            background: #2ecc71;
+            color: white;
+        }
+
+        .btn-create:hover {
+            background: #27ae60;
+            text-decoration: none !important;
+        }
+
+        /* 分页样式 - 与 doctor_all.html 保持一致 */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+            gap: 5px;
+        }
+
+        .page-link {
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            color: #3498db;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .page-link:hover {
+            background: #f8f9fa;
+            text-decoration: none;
+        }
+
+        .page-link.active {
+            background: #2ecc71;  /* 绿色主题 */
+            color: white;
+            border-color: #2ecc71;
+            text-decoration: none;
+        }
+
+        .page-link.disabled {
+            color: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* 空状态 - 改进样式 */
+        .empty-state {
+            text-align: center;
+            padding: 80px 40px;
+            background: white;
+            border-radius: 8px;
+            margin-top: 40px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .empty-icon {
+            font-size: 64px;
+            color: #bdc3c7;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .empty-state h2 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .empty-state p {
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 992px) {
+            .sidebar {
+                width: 220px;
+                transform: translateX(-220px);
+                transition: transform 0.3s ease;
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+            }
+            
+            .profile-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .detail-row {
+                grid-template-columns: 1fr;
+            }
+            
+            #backToTop {
+                bottom: 20px;
+                right: 20px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .profile-stats {
+                grid-template-columns: 1fr;
+            }
+            
+            .profile-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .profile-meta {
+                text-align: left;
+                margin-top: 10px;
+            }
+            
+            .profile-item {
+                padding: 20px 15px;
+            }
+            
+            .actions {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+
+        /* 动画效果 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .profile-item {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1500;
+            background: #2ecc71;  /* 绿色主题 */
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 10px 15px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        @media (max-width: 992px) {
+            .mobile-menu-toggle {
+                display: block;
+            }
+        }
+        
+        /* 侧边栏底部样式 */
+        .sidebar-footer {
+            margin-top: auto;
+            padding: 20px 25px;
+            border-top: 1px solid #34495e;
+        }
+
+        .logout-form-sidebar {
+            width: 100%;
+        }
+
+        .logout-btn-sidebar {
+            width: 100%;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: background 0.3s;
+        }
+
+        .logout-btn-sidebar:hover {
+            background: #c0392b;
+        }
+
+        /* 返回顶部按钮 */
+        #backToTop {
+            display: none;
+            position: fixed;
+            bottom: 40px;
+            right: 40px;
+            z-index: 1500;
+            width: 50px;
+            height: 50px;
+            border: none;
+            border-radius: 50%;
+            background: #2ecc71;  /* 绿色主题 */
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #backToTop:hover {
+            background: #27ae60;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        /* 档案标签 */
+        .profile-tags {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .profile-tag {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .tag-has-account {
+            background: #2ecc71;
+            color: white;
+        }
+
+        .tag-no-account {
+            background: #95a5a6;
+            color: white;
+        }
+
+        .tag-has-notes {
+            background: #f39c12;
+            color: white;
+        }
+
+        .stat-urged {
+            border-top: 4px solid #e74c3c !important;  /* 红色强调催促 */
+        }
+
+        /* 催促档案特殊样式 */
+        .profile-item.urged {
+            border: 2px solid #e74c3c !important;
+            background: linear-gradient(135deg, #fff5f5 0%, #ffffff 100%) !important;
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.15) !important;
+        }
+
+        .profile-item.urged .profile-name {
+            color: #e74c3c !important;
+        }
+
+        /* 催促标签 */
+        .tag-urged {
+            background: #e74c3c !important;
+            color: white !important;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.8; }
+            50% { opacity: 1; }
+            100% { opacity: 0.8; }
+        }
+
+        /* 档案头部改进 */
+        .profile-header {
+            position: relative;
+            z-index: 2;
+        }
+
+    </style>
+</head>
+
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="mobile-menu-toggle" id="mobileMenuToggle">☰ 菜单</button>
+    
+    <div class="doctor-container">
+        <!-- 侧边栏 -->
+        <div class="sidebar" id="sidebar">
+            <h2>工作台</h2>
+            <ul class="sidebar-menu">
+                <li><a href="{% url 'doctor_index' %}"><i>🏠</i> 仪表板</a></li>
+                <li><a href="{% url 'doctor_urge' %}"><i>🔥</i> 处理催单
+                        {% if urge_count > 0 %}
+                        <span
+                            style="float: right; background: #e74c3c; color: white; padding: 2px 8px; border-radius: 10px; font-size: 12px;">
+                            {{ urge_count }}</span>
+                        {% endif %}
+                    </a></li>
+                <li><a href="{% url 'doctor_respond' %}"><i>💬</i> 回应预约
+                        {% if unresponded_count > 0 %}
+                        <span
+                            style="float: right; background: #f39c12; color: white; padding: 2px 8px; border-radius: 10px; font-size: 12px;">
+                            {{ unresponded_count }}</span>
+                        {% endif %}
+                    </a></li>
+                <li><a href="{% url 'doctor_process' %}"><i>⚙️</i> 处理预约
+                        {% if unprocessed_count > 0 %}
+                        <span
+                            style="float: right; background: #3498db; color: white; padding: 2px 8px; border-radius: 10px; font-size: 12px;">
+                            {{ unprocessed_count }}</span>
+                        {% endif %}
+                    </a></li>
+                <li><a href="{% url 'doctor_all' %}"><i>📋</i> 预约管理</a></li>
+                <li><a href="{% url 'patients_info' %}" class="active"><i>📁</i> 用户档案</a></li>
+                <li><a href="{% url 'user_accounts' %}"><i>👥</i> 用户账户</a></li>
+                <li><a href="{% url 'data_backup' %}"><i>💾</i> 数据备份</a></li>
+            </ul>
+            <div class="sidebar-footer">
+                <form method="post" action="{% url 'logout' %}" class="logout-form-sidebar">
+                    {% csrf_token %}
+                    <button type="submit" class="logout-btn-sidebar">
+                        <i>🚪</i> 退出登录
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <!-- 欢迎信息 -->
+            <div class="welcome-message">
+                <h2>用户档案管理</h2>
+                <a href="{% url 'create_profile' %}" class="btn btn-create">
+                    <i>➕</i> 创建新档案
+                </a>
+            </div>
+
+            <!-- 搜索栏 -->
+            <div class="search-bar">
+                <form method="get">
+                    <input type="text" name="search" placeholder="搜索姓名、微信号、关联账号..." value="{{ search_query }}">
+                    <button type="submit">搜索</button>
+                    {% if search_query %}
+                    <button type="button" onclick="window.location.href='{% url 'patients_info' %}'">清除搜索</button>
+                    {% endif %}
+                </form>
+            </div>
+
+            <!-- 档案统计 -->
+            <div class="profile-stats">
+                <div class="stat-item stat-total">
+                    <div class="stat-value">{{ total_profiles }}</div>
+                    <div class="stat-label">总档案数</div>
+                </div>
+                <div class="stat-item stat-with-account">
+                    <div class="stat-value">{{ profiles_with_account }}</div>
+                    <div class="stat-label">关联账号档案数</div>
+                </div>
+                <div class="stat-item stat-search-results">
+                    <div class="stat-value">
+                        {% if profiles.paginator.count %}
+                        {{ profiles.paginator.count }}
+                        {% else %}
+                        0
+                        {% endif %}
+                    </div>
+                    <div class="stat-label">显示总数</div>
+                </div>
+                <div class="stat-item stat-urged">
+                    <div class="stat-value">{{ urged_profiles_count }}</div>
+                    <div class="stat-label">催促档案数</div>
+                </div>
+            </div>
+
+            {% if profiles %}
+            <!-- 档案列表 -->
+            <div class="profiles-list">
+                {% for profile in profiles %}
+                <div class="profile-item {% if profile.is_urged %}urged{% endif %}" id="profile-{{ profile.id }}">
+                    <!-- 档案头部 -->
+                    <div class="profile-header">
+                        <div>
+                            <h3 class="profile-name">
+                                {{ profile.name }}
+                                {% if profile.account %}   
+                                <span class="profile-tag tag-has-account">有关联账号</span>
+                                {% else %}
+                                <span class="profile-tag tag-no-account">无关联账号</span>
+                                {% endif %}
+                                {% if profile.is_urged %}
+                                <span class="profile-tag tag-urged">🔥 期待回复</span>
+                                {% endif %}
+                            </h3>
+                        </div>
+                        <div class="profile-meta">
+                            <div><strong>最后更新：</strong>{{ profile.updated_at|date:"Y-m-d H:i" }}</div>
+                            <div><strong>记录数：</strong>{{ profile.record_count }}</div>
+                        </div>
+                    </div>
+
+                    <!-- 档案详情 -->
+                    <div class="profile-details">
+                        <div class="detail-row">
+                            <div class="detail-item">
+                                <strong>微信号：</strong>{{ profile.wechat_id }}
+                            </div>
+                            <div class="detail-item">
+                                <strong>关联账号：</strong>
+                                {% if profile.account %}
+                                {{ profile.account.email }}
+                                {% else %}
+                                无
+                                {% endif %}
+                            </div>
+                            <div class="detail-item">
+                                <strong>创建时间：</strong>{{ profile.created_at|date:"Y-m-d H:i" }}
+                            </div>
+                        </div>
+                        
+                        {% if profile.notes %}
+                        <div class="detail-notes">
+                            <strong>概述：</strong>{{ profile.overview |truncatechars:90 }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- 操作按钮 -->
+                    <div class="actions">
+                        <a href="{% url 'profile_detail' profile.id %}" class="btn btn-view">
+                            查看详情
+                        </a>
+                        <a href="{% url 'edit_profile' profile.id %}" class="btn btn-edit">
+                            编辑档案
+                        </a>
+                        {% if profile.account %}
+                        <a href="{% url 'doctor_all' %}?search={{ profile.account.email }}" class="btn btn-appointments">
+                            查看预约
+                        </a>
+                        {% endif %}
+                        <form method="post" action="{% url 'delete_profile' profile.id %}" style="display: inline;"
+                            onsubmit="return confirm('确定要删除此档案吗？所有记录也将被删除。')">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-delete">
+                                删除档案
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+
+                <!-- 分页 -->
+                {% if profiles.has_other_pages %}
+                <div class="pagination">
+                    {% if profiles.has_previous %}
+                    <a class="page-link"
+                        href="?page={{ profiles.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">上一页</a>
+                    {% else %}
+                    <span class="page-link disabled">上一页</span>
+                    {% endif %}
+
+                    {% for i in profiles.paginator.page_range %}
+                    {% if i == profiles.number %}
+                    <span class="page-link active">{{ i }}</span>
+                    {% else %}
+                    <a class="page-link"
+                        href="?page={{ i }}{% if search_query %}&search={{ search_query }}{% endif %}">{{ i }}</a>
+                    {% endif %}
+                    {% endfor %}
+
+                    {% if profiles.has_next %}
+                    <a class="page-link"
+                        href="?page={{ profiles.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">下一页</a>
+                    {% else %}
+                    <span class="page-link disabled">下一页</span>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+            {% else %}
+            <!-- 空状态 -->
+            <div class="empty-state">
+                {% if search_query %}
+                <span class="empty-icon">🔍</span>
+                <h2>没有找到匹配的档案</h2>
+                <p>请尝试其他搜索关键词</p>
+                <a href="{% url 'patients_info' %}" class="btn btn-view">
+                    清除搜索
+                </a>
+                {% else %}
+                <span class="empty-icon">📁</span>
+                <h2>暂无档案数据</h2>
+                <p>还没有创建任何用户档案，开始创建第一个吧</p>
+                <a href="{% url 'create_profile' %}" class="btn btn-create">
+                    创建第一个档案
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- 返回顶部按钮 -->
+    <button id="backToTop" title="返回顶部">↑</button>
+
+    <script>
+        // 返回顶部功能
+        const backToTopButton = document.getElementById('backToTop');
+        
+        // 当页面滚动时显示或隐藏按钮
+        window.addEventListener('scroll', function() {
+            if (window.pageYOffset > 300) {
+                backToTopButton.style.display = 'flex';
+            } else {
+                backToTopButton.style.display = 'none';
+            }
+        });
+
+        // 点击按钮返回顶部
+        backToTopButton.addEventListener('click', function() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+
+        // 移动端菜单切换
+        const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+        const sidebar = document.getElementById('sidebar');
+        
+        if (mobileMenuToggle && sidebar) {
+            mobileMenuToggle.addEventListener('click', function() {
+                sidebar.classList.toggle('active');
+            });
+            
+            // 点击菜单外部关闭菜单
+            document.addEventListener('click', function(event) {
+                if (!sidebar.contains(event.target) && !mobileMenuToggle.contains(event.target)) {
+                    sidebar.classList.remove('active');
+                }
+            });
+        }
+
+        // 添加键盘快捷键
+        document.addEventListener('keydown', function (event) {
+            // Ctrl + F 聚焦搜索框
+            if (event.ctrlKey && event.key === 'f') {
+                event.preventDefault();
+                document.querySelector('input[name="search"]').focus();
+            }
+        });
+
+        // 页面加载时添加动画效果
+        document.addEventListener('DOMContentLoaded', function () {
+            const items = document.querySelectorAll('.profile-item');
+            items.forEach((item, index) => {
+                item.style.animationDelay = `${index * 0.05}s`;
+                item.style.animation = 'fadeIn 0.5s ease-out forwards';
+                item.style.opacity = 0;
+            });
+        });
+    </script>
+</body>
+</html>

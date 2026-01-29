@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>档案更新通知</title>
+    <style>
+        body {
+            font-family: 'Arial', 'Microsoft YaHei', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .email-header {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+        .email-header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .email-body {
+            padding: 30px;
+        }
+        .profile-info {
+            background: #f8f9fa;
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border-left: 4px solid #2ecc71;
+        }
+        .profile-info h3 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        .profile-info p {
+            margin: 5px 0;
+        }
+        .record-info {
+            background: #f0f8ff;
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border-left: 4px solid #3498db;
+        }
+        .record-info h3 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        .record-content {
+            background: white;
+            padding: 15px;
+            border-radius: 4px;
+            border: 1px solid #e0e0e0;
+            margin-top: 10px;
+            line-height: 1.6;
+            white-space: pre-line;
+        }
+        .action-buttons {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        .btn:hover {
+            background: #2980b9;
+        }
+        .email-footer {
+            text-align: center;
+            padding: 20px;
+            color: #7f8c8d;
+            font-size: 14px;
+            border-top: 1px solid #eee;
+            background: #fafafa;
+        }
+        .notification-type {
+            display: inline-block;
+            padding: 5px 15px;
+            background: #f39c12;
+            color: white;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-bottom: 15px;
+        }
+        .important-note {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-left: 4px solid #fdcb6e;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="email-header">
+            <h1>档案更新通知</h1>
+        </div>
+        
+        <div class="email-body">
+            <div class="notification-type">
+                医师记录更新
+            </div>
+            
+            <p>亲爱的 {{ profile.account.email }} 用户：</p>
+            <p>您好！伯里欧斯已在您的档案中添加了新的记录，详情如下：</p>
+            
+            <div class="profile-info">
+                <h3>📁 档案信息</h3>
+                <p><strong>档案姓名：</strong> {{ profile.name }}</p>
+                <p><strong>更新时间：</strong> {{ record.created_at|date:"Y年m月d日 H:i" }}（北京时间）</p>
+            </div>
+            
+            <div class="record-info">
+                <h3>📝 记录内容</h3>
+                <div class="record-content">
+                    {{ record.content|linebreaks }}
+                </div>
+            </div>
+            
+            <div class="important-note">
+                <strong>📌 温馨提示：</strong>
+                伯里欧斯已查看并记录了您的最新情况。如有疑问或需要进一步沟通，请及时回复。
+            </div>
+            
+            <p>此邮件为伯里欧斯的小助手自动发送，请勿直接回复。</p>
+        </div>
+        
+        <div class="email-footer">
+            <p>© {% now "Y" %} {{ site_name }}. 保留所有权利。</p>
+            <p>如需帮助，请联系伯里欧斯。</p>
+        </div>
+    </div>
+</body>
+</html>

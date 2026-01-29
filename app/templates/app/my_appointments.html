@@ -1,0 +1,435 @@
+{% extends "app/base_user.html" %}
+
+{% block title %}我的预约{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* 返回按钮样式 */
+    .back-btn {
+        background: var(--secondary-color);
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        border-radius: var(--border-radius);
+        font-size: 16px;
+        cursor: pointer;
+        transition: var(--transition);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+        margin-bottom: 20px;
+    }
+    
+    .back-btn:hover {
+        background: #2980b9;
+        transform: translateX(-3px);
+    }
+    
+    /* 页面标题样式 - 新增 */
+    .appointments-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 15px;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 249, 250, 0.9) 100%);
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        border-left: 5px solid var(--accent-color);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .appointments-header::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background: linear-gradient(90deg, var(--primary-color), var(--accent-color), var(--secondary-color));
+    }
+    
+    .header-title {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--dark-text);
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .appointment-count {
+        background: linear-gradient(135deg, var(--accent-color) 0%, #8e44ad 100%);
+        color: white;
+        padding: 8px 18px;
+        border-radius: 20px;
+        font-size: 15px;
+        font-weight: 600;
+        box-shadow: 0 3px 10px rgba(155, 89, 182, 0.3);
+        transition: var(--transition);
+        border: 2px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .appointment-count:hover {
+        transform: scale(1.05);
+        box-shadow: 0 5px 15px rgba(155, 89, 182, 0.4);
+    }
+    
+    .appointments-list {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .appointment-card {
+        background: var(--card-bg);
+        border-radius: var(--border-radius);
+        padding: 20px;
+        box-shadow: var(--shadow);
+        border-left: 5px solid var(--primary-color);
+        transition: var(--transition);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .appointment-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    }
+    
+    .appointment-card.deleted {
+        opacity: 0.7;
+        border-left-color: var(--light-text);
+    }
+    
+    .appointment-card.urgent {
+        border-left-color: var(--warning-color);
+        background: #fff9e6;
+    }
+    
+    .appointment-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 15px;
+    }
+    
+    .patient-name {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--dark-text);
+    }
+    
+    .status-badge {
+        padding: 6px 14px;
+        border-radius: 15px;
+        font-size: 13px;
+        font-weight: 600;
+        color: white;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    
+    .status-waiting { background: #95a5a6; }
+    .status-responded { background: var(--secondary-color); }
+    .status-processed { background: var(--primary-color); }
+    .status-urged { background: var(--warning-color); }
+    .status-deleted { background: var(--light-text); }
+    
+    .appointment-info {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+    
+    .info-item {
+        font-size: 14px;
+    }
+    
+    .info-label {
+        color: var(--light-text);
+        font-size: 12px;
+        margin-bottom: 3px;
+    }
+    
+    .info-value {
+        font-weight: 500;
+        word-break: break-word;
+    }
+    
+    .annotation-box {
+        background: var(--light-bg);
+        padding: 12px 15px;
+        border-radius: 8px;
+        margin: 15px 0;
+        border-left: 3px solid var(--secondary-color);
+    }
+    
+    .annotation-label {
+        font-size: 12px;
+        color: var(--light-text);
+        margin-bottom: 5px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    
+    .annotation-content {
+        font-size: 14px;
+        color: var(--dark-text);
+        line-height: 1.5;
+    }
+    
+    .actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px solid #eee;
+    }
+    
+    .action-btn {
+        padding: 8px 15px;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: var(--transition);
+        text-decoration: none;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+    
+    .action-btn.urge {
+        background: var(--warning-color);
+        color: white;
+    }
+    
+    .action-btn.modify {
+        background: var(--secondary-color);
+        color: white;
+    }
+    
+    .action-btn.delete {
+        background: var(--danger-color);
+        color: white;
+    }
+    
+    .action-btn:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+    }
+    
+    .action-btn:disabled,
+    .action-btn.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 50px 20px;
+        color: var(--light-text);
+        background: rgba(255, 255, 255, 0.8);
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        margin-top: 20px;
+    }
+    
+    .empty-icon {
+        font-size: 48px;
+        margin-bottom: 20px;
+        opacity: 0.5;
+    }
+    
+    .queue-position {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        background: #e3f2fd;
+        color: #1976d2;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+    
+    .queue-position .icon {
+        animation: pulse 1.5s infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+    
+    /* 响应式调整 */
+    @media (max-width: 480px) {
+        .appointments-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .header-title {
+            font-size: 20px;
+        }
+        
+        .appointment-count {
+            align-self: flex-end;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+    <!-- 返回按钮 -->
+    <a href="{% url 'index' %}" class="back-btn">← 返回首页</a>
+    
+    <div class="appointments-header">
+        <div class="header-title">我的预约</div>
+        <div class="appointment-count">
+            共 {{ appointments|length }} 个预约
+        </div>
+    </div>
+    
+    <!-- 催单状态提示 -->
+    {% if urges_left == 0 %}
+    <div class="message error" style="margin-bottom: 20px;">
+        ⚠️ 本周催单机会已用完
+    </div>
+    {% else %}
+    <div class="message success" style="margin-bottom: 20px;">
+        ✅ 本周还可催单 {{ urges_left }} 次
+    </div>
+    {% endif %}
+    
+    {% if appointments %}
+    <div class="appointments-list">
+        {% for app in appointments %}
+        <div class="appointment-card {% if app.is_deleted %}deleted{% endif %} {% if app.is_urged %}urgent{% endif %}">
+            <div class="appointment-header">
+                <div class="patient-name">{{ app.patient_name }}</div>
+                <div class="status-badge {% if app.is_deleted %}status-deleted
+                    {% elif app.is_processed %}status-processed
+                    {% elif app.is_urged %}status-urged
+                    {% elif app.is_responded %}status-responded
+                    {% else %}status-waiting{% endif %}">
+                    {% if app.is_deleted %}
+                    已删除
+                    {% elif app.is_processed %}
+                    已处理
+                    {% elif app.is_urged %}
+                    已催单
+                    {% elif app.is_responded %}
+                    已回应
+                    {% else %}
+                    等待回应
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="appointment-info">
+                <div class="info-item">
+                    <div class="info-label">优先级</div>
+                    <div class="info-value">{{ app.get_priority_display }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">创建时间</div>
+                    <div class="info-value">{{ app.created_at|date:"m-d H:i" }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">微信号</div>
+                    <div class="info-value">{{ app.wechat_id }}</div>
+                </div>
+                {% if app.queue_position %}
+                <div class="info-item">
+                    <div class="info-label">排队位置</div>
+                    <div class="info-value">
+                        <span class="queue-position">
+                            <span class="icon">⏳</span>
+                            第 {{ app.queue_position }} 位
+                        </span>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- 需求描述 -->
+            <div class="info-item" style="grid-column: 1 / -1;">
+                <div class="info-label">需求描述（点击修改可查看详情）</div>
+                <div class="info-value" style="max-height: 60px; overflow: hidden; text-overflow: ellipsis;">
+                    {{ app.demand|truncatechars:100 }}
+                </div>
+            </div>
+            
+            <!-- 医师批注 -->
+            {% if app.annotation and not app.is_deleted %}
+            <div class="annotation-box">
+                <div class="annotation-label">📝 伯里欧斯的批注</div>
+                <div class="annotation-content">{{ app.annotation|linebreaksbr }}</div>
+            </div>
+            {% endif %}
+            
+            <!-- 操作按钮 -->
+            {% if not app.is_deleted %}
+            <div class="actions">
+                {% if app.is_responded and not app.is_processed %}
+                    {% if not app.is_urged %}
+                        {% if urges_left > 0 %}
+                        <form method="post" action="{% url 'urge' app.id %}" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="action-btn urge"
+                                    onclick="return confirm('确定要催单吗？本周剩余{{ urges_left }}次机会')">
+                                ⚡ 催单
+                            </button>
+                        </form>
+                        {% else %}
+                        <button class="action-btn urge disabled" disabled>无法催单</button>
+                        {% endif %}
+                    {% else %}
+                    <button class="action-btn urge disabled" disabled>已催单</button>
+                    {% endif %}
+                {% endif %}
+                
+                {% if app.can_modify_today_simple and not app.is_processed %}
+                <a href="{% url 'update' app.id %}" class="action-btn modify">✏️ 修改</a>
+                {% else %}
+                <button class="action-btn modify disabled" disabled>无法修改</button>
+                {% endif %}
+                
+                <form method="post" action="{% url 'delete' app.id %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="action-btn delete"
+                            onclick="return confirm('确定删除？删除后第二天自动清理')">
+                        🗑️ 删除
+                    </button>
+                </form>
+            </div>
+            {% elif app.is_deleted %}
+            <div style="color: var(--light-text); font-size: 13px; margin-top: 10px;">
+                🗑️ 已标记删除，将于明天自动清理
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">📭</div>
+        <div style="font-size: 18px; margin-bottom: 10px;">暂无预约记录</div>
+        <div style="color: var(--light-text); margin-bottom: 20px;">快去创建一个预约吧</div>
+        <a href="{% url 'create_appointment' %}" class="back-btn">创建第一个预约</a>
+    </div>
+    {% endif %}
+{% endblock %}

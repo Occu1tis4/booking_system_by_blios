@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- 手动添加 favicon 代码 -->
+    <link rel="icon" type="image/x-icon" href="{% static 'booking_system/favicon/favicon.ico' %}">
+    <link rel="icon" type="image/svg+xml" href="{% static 'booking_system/favicon/favicon.svg' %}">
+    <link rel="icon" type="image/png" sizes="96x96" href="{% static 'booking_system/favicon/favicon-96x96.png' %}">
+    <link rel="apple-touch-icon" href="{% static 'booking_system/favicon/apple-touch-icon.png' %}">
+    <link rel="manifest" href="{% static 'booking_system/favicon/site.webmanifest' %}">
+    <meta name="theme-color" content="#ffffff">
+
+    <title>预约管理 - 工作台</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+
+        .doctor-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 固定侧边栏 */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 250px;
+            height: 100vh;
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px 0;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar h2 {
+            text-align: center;
+            color: #ecf0f1;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #34495e;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar-menu li {
+            margin: 0;
+        }
+
+        .sidebar-menu a {
+            display: block;
+            padding: 15px 25px;
+            color: #ecf0f1;
+            text-decoration: none;
+            transition: all 0.3s;
+            border-left: 4px solid transparent;
+        }
+
+        .sidebar-menu a:hover {
+            background-color: #34495e;
+            border-left: 4px solid #3498db;
+        }
+
+        .sidebar-menu a.active {
+            background-color: #34495e;
+            border-left: 4px solid #9b59b6;  /* 预约管理使用紫色主题 */
+            font-weight: bold;
+        }
+
+        /* 调整主内容区域 */
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            margin-left: 250px; /* 为固定侧边栏留出空间 */
+            min-height: 100vh;
+        }
+
+        .welcome-message {
+            background: white;
+            border-radius: 8px;
+            padding: 12px 25px;  /* 改为：上下12px，左右25px */
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: flex;  /* 新增：flex布局 */
+            justify-content: space-between;  /* 新增：两端对齐 */
+            align-items: center;  /* 新增：垂直居中 */
+        }
+
+        /* 调整标题 */
+        .welcome-message h2 {
+            color: #2c3e50;
+            margin: 0;  /* 改为：去除默认的外边距 */
+        }
+
+        .logout-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            float: right;
+            margin-top: -40px;
+        }
+
+        .logout-btn:hover {
+            background: #c0392b;
+        }
+
+        /* 筛选标签 */
+        .filter-tabs {
+            display: flex;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .filter-tab {
+            flex: 1;
+            text-align: center;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+            color: #333;
+            text-decoration: none;
+            display: block;
+        }
+
+        .filter-tab:hover {
+            background: #f8f9fa;
+            text-decoration: none;
+        }
+
+        .filter-tab.active {
+            border-bottom: 3px solid #9b59b6;  /* 预约管理使用紫色主题 */
+            background: #f8f9fa;
+            font-weight: bold;
+            color: #2c3e50;
+            text-decoration: none;
+        }
+
+        .filter-tab .count {
+            background: #3498db;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            margin-left: 5px;
+        }
+
+        .filter-tab.urge.active {
+            border-bottom-color: #e74c3c;
+            color: #e74c3c;
+        }
+
+        .filter-tab.unresponded.active {
+            border-bottom-color: #f39c12;
+            color: #f39c12;
+        }
+
+        .filter-tab.processed.active {
+            border-bottom-color: #2ecc71;
+            color: #2ecc71;
+        }
+
+        /* 搜索栏 */
+        .search-bar {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .search-bar form {
+            display: flex;
+            gap: 10px;
+        }
+
+        .search-bar input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        .search-bar button {
+            background: #2ecc71;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .search-bar button:hover {
+            background: #27ae60;
+        }
+
+        /* 预约列表 */
+        .appointments-list {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 预约项 */
+        .appointment-item {
+            border: 1px solid #eee;
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 15px;
+            background: #f9f9f9;
+            transition: all 0.3s;
+        }
+
+        .appointment-item:hover {
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        /* 状态标签 */
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .status-urge {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .status-unresponded {
+            background: #f39c12;
+            color: white;
+        }
+
+        .status-responded {
+            background: #3498db;
+            color: white;
+        }
+
+        .status-processed {
+            background: #2ecc71;
+            color: white;
+        }
+
+        /* 优先级标签 */
+        .priority-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+
+        .priority-1 {
+            background: #f44336;
+            color: white;
+        }
+
+        .priority-2 {
+            background: #ff9800;
+            color: white;
+        }
+
+        .priority-3 {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .priority-4 {
+            background: #2196F3;
+            color: white;
+        }
+
+        /* 操作按钮 */
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .btn-respond {
+            background: #f39c12;
+            color: white;
+        }
+
+        .btn-respond:hover {
+            background: #d68910;
+        }
+
+        .btn-process {
+            background: #2ecc71;
+            color: white;
+        }
+
+        .btn-process:hover {
+            background: #27ae60;
+        }
+
+        .btn-remove {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-remove:hover {
+            background: #c0392b;
+        }
+
+        .btn:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+        }
+
+        /* 模态对话框样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            overflow: auto;
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 25px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            position: relative;
+            z-index: 2001;
+        }
+
+        /* 确保模态框在页面中垂直居中 */
+        @media (min-height: 600px) {
+            .modal-content {
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                margin: 0;
+                max-height: 90vh;
+            }
+        }
+
+        /* 模态框标题样式 */
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #eee;
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 1;
+        }
+
+        /* 按钮组样式 - 确保按钮始终可见 */
+        .modal-content .form-group:last-of-type {
+            margin-bottom: 30px;
+        }
+
+        .modal-content .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: auto;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            position: sticky;
+            bottom: 0;
+            background: white;
+            z-index: 1;
+        }
+
+        .modal-content .btn-group .btn {
+            flex: 1;
+            padding: 12px;
+            font-size: 16px;
+        }
+
+        /* 分页样式 */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+            gap: 5px;
+        }
+
+        .page-link {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            color: #3498db;
+            text-decoration: none;
+        }
+
+        .page-link:hover {
+            background: #f8f9fa;
+        }
+
+        .page-link.active {
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+
+        .page-link.disabled {
+            color: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 60px 40px;
+            background: white;
+            border-radius: 8px;
+            margin-top: 40px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .empty-state i {
+            font-size: 64px;
+            color: #bdc3c7;
+            margin-bottom: 20px;
+        }
+
+        /* 信息展示 */
+        .info-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .info-item {
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            border-left: 3px solid #3498db;
+        }
+
+        .info-item strong {
+            color: #555;
+            margin-right: 10px;
+        }
+
+        /* 表单样式 */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .close-modal:hover {
+            color: #333;
+        }
+
+        /* 修复分页链接样式 */
+        .pagination a {
+            text-decoration: none;
+            color: #3498db;
+        }
+
+        .pagination a:hover {
+            text-decoration: none;
+            color: #2980b9;
+        }
+
+        .page-link.active {
+            text-decoration: none;
+        }
+
+        /* 返回顶部按钮 */
+        #backToTop {
+            display: none;
+            position: fixed;
+            bottom: 40px;
+            right: 40px;
+            z-index: 1500;
+            width: 50px;
+            height: 50px;
+            border: none;
+            border-radius: 50%;
+            background: #9b59b6;  /* 预约管理使用紫色主题 */
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #backToTop:hover {
+            background: #8e44ad;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        #backToTop:active {
+            transform: translateY(0);
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 992px) {
+            .sidebar {
+                width: 220px;
+                transform: translateX(-220px);
+                transition: transform 0.3s ease;
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+            }
+            
+            .filter-tabs {
+                flex-wrap: wrap;
+            }
+            
+            .filter-tab {
+                flex: 1 0 50%;
+            }
+            
+            #backToTop {
+                bottom: 20px;
+                right: 20px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .filter-tab {
+                flex: 1 0 100%;
+            }
+            
+            .info-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .appointment-item {
+                padding: 15px;
+            }
+            
+            .actions {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+        }
+
+        /* 动画效果 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .appointment-item {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1500;
+            background: #9b59b6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 10px 15px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        @media (max-width: 992px) {
+            .mobile-menu-toggle {
+                display: block;
+            }
+        }
+        /* 侧边栏底部样式 */
+        .sidebar-footer {
+            margin-top: auto; /* 这将把内容推到侧边栏底部 */
+            padding: 20px 25px;
+            border-top: 1px solid #34495e;
+        }
+
+        .logout-form-sidebar {
+            width: 100%;
+        }
+
+        .logout-btn-sidebar {
+            width: 100%;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: background 0.3s;
+        }
+
+        .logout-btn-sidebar:hover {
+            background: #c0392b;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="mobile-menu-toggle" id="mobileMenuToggle">☰ 菜单</button>
+    
+    <div class="doctor-container">
+        <!-- 侧边栏 -->
+        <div class="sidebar" id="sidebar">
+            <h2>工作台</h2>
+            <ul class="sidebar-menu">
+                <li><a href="{% url 'doctor_index' %}"><i>🏠</i> 仪表板</a></li>
+                <li><a href="{% url 'doctor_urge' %}"><i>🔥</i> 处理催单
+                        {% if urge_count > 0 %}
+                        <span
+                            style="float: right; background: #e74c3c; color: white; padding: 2px 8px; border-radius: 10px; font-size: 12px;">
+                            {{ urge_count }}</span>
+                        {% endif %}
+                    </a></li>
+                <li><a href="{% url 'doctor_respond' %}"><i>💬</i> 回应预约
+                        {% if unresponded_count > 0 %}
+                        <span
+                            style="float: right; background: #f39c12; color: white; padding: 2px 8px; border-radius: 10px; font-size: 12px;">
+                            {{ unresponded_count }}</span>
+                        {% endif %}
+                    </a></li>
+                <li><a href="{% url 'doctor_process' %}"><i>⚙️</i> 处理预约
+                        {% if unprocessed_count > 0 %}
+                        <span
+                            style="float: right; background: #3498db; color: white; padding: 2px 8px; border-radius: 10px; font-size: 12px;">
+                            {{ unprocessed_count }}</span>
+                        {% endif %}
+                    </a></li>
+                <li><a href="{% url 'doctor_all' %}" class="active"><i>📋</i> 预约管理</a></li>
+                <li><a href="{% url 'patients_info' %}"><i>📁</i> 用户档案</a></li>
+                <li><a href="{% url 'user_accounts' %}"><i>👥</i> 用户账户</a></li>
+                <li><a href="{% url 'data_backup' %}"><i>💾</i> 数据备份</a></li>
+            </ul>
+            <div class="sidebar-footer">
+                <form method="post" action="{% url 'logout' %}" class="logout-form-sidebar">
+                    {% csrf_token %}
+                    <button type="submit" class="logout-btn-sidebar">
+                        <i>🚪</i> 退出登录
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <!-- 欢迎信息 -->
+            <div class="welcome-message">
+                <h2>预约管理</h2>
+                <div style="clear: both;"></div>
+            </div>
+
+            <!-- 筛选标签 -->
+            <div class="filter-tabs">
+                <a href="?filter=urge" class="filter-tab urge {% if filter_type == 'urge' %}active{% endif %}">
+                    催单预约
+                    <span class="count">{{ urge_count }}</span>
+                </a>
+                <a href="?filter=unresponded"
+                    class="filter-tab unresponded {% if filter_type == 'unresponded' %}active{% endif %}">
+                    待回应
+                    <span class="count">{{ unresponded_count }}</span>
+                </a>
+                <a href="?filter=responded_unprocessed"
+                    class="filter-tab {% if filter_type == 'responded_unprocessed' %}active{% endif %}">
+                    待处理
+                    <span class="count">{{ unprocessed_count }}</span>
+                </a>
+                <a href="?filter=processed"
+                    class="filter-tab processed {% if filter_type == 'processed' %}active{% endif %}">
+                    已处理
+                </a>
+                <a href="?filter=all" class="filter-tab {% if filter_type == 'all' %}active{% endif %}">
+                    全部预约
+                    <span class="count">{{ appointments.paginator.count }}</span>
+                </a>
+            </div>
+
+            <!-- 搜索栏 -->
+            <div class="search-bar">
+                <form method="get">
+                    <input type="hidden" name="filter" value="{{ filter_type }}">
+                    <input type="text" name="search" placeholder="搜索预约人、需求、微信号、批注..." value="{{ search_query }}">
+                    <button type="submit">搜索</button>
+                    {% if search_query %}
+                    <button type="button" onclick="window.location.href='?filter={{ filter_type }}'">清除搜索</button>
+                    {% endif %}
+                </form>
+            </div>
+
+            {% if appointments %}
+            <!-- 预约列表 -->
+            <div class="appointments-list">
+                {% for appointment in appointments %}
+                <div class="appointment-item" id="appointment-{{ appointment.id }}">
+                    <!-- 预约头部 -->
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
+                        <div>
+                            <h3 style="margin: 0; color: #2c3e50;">
+                                {{ appointment.patient_name }}
+                            </h3>
+                            <div style="margin-top: 12px;">
+                                {% if appointment.is_urged %}
+                                <span class="status-badge status-urge">催单</span>
+                                {% endif %}
+                                {% if appointment.is_processed %}
+                                <span class="status-badge status-processed">已处理</span>
+                                {% elif appointment.is_responded %}
+                                <span class="status-badge status-responded">已回应</span>
+                                {% else %}
+                                <span class="status-badge status-unresponded">未回应</span>
+                                {% endif %}
+                                <span class="priority-badge priority-{{ appointment.priority }}">
+                                    优先级：
+                                    {% if appointment.priority == 1 %}
+                                        低
+                                    {% elif appointment.priority == 2 %}
+                                        中
+                                    {% elif appointment.priority == 3 %}
+                                        高
+                                    {% elif appointment.priority == 4 %}
+                                        危
+                                    {% else %}
+                                        {{ appointment.priority }}
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div><strong>创建时间：</strong>{{ appointment.created_at|date:"Y-m-d H:i" }}</div>
+                            {% if appointment.last_modified_at %}
+                            <div><strong>最后修改：</strong>{{ appointment.last_modified_at|date:"Y-m-d H:i" }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- 基本信息 -->
+                    <div class="info-row">
+                        <div class="info-item">
+                            <strong>微信号：</strong>{{ appointment.wechat_id }}
+                        </div>
+                        <div class="info-item">
+                            <strong>预约人邮箱：</strong>{{ appointment.guest.email }}
+                        </div>
+                    </div>
+
+                    <!-- 需求描述部分 -->
+                    <div style="background: white; padding: 15px; border-radius: 4px; margin: 10px 0; border-left: 3px solid #9b59b6;">
+                        <strong>需求描述：</strong><br>
+                        <div style="
+                            max-height: 200px; 
+                            overflow-y: auto;
+                            overflow-wrap: anywhere; 
+                            word-wrap: break-word; 
+                            word-break: break-all;
+                            margin-top: 8px;
+                            padding-right: 5px;">
+                            {{ appointment.demand|linebreaksbr }}
+                        </div>
+                    </div>
+
+                    <!-- 批注部分 -->
+                    {% if appointment.annotation %}
+                    <div style="background: #e8f4f8; padding: 15px; border-radius: 4px; margin: 10px 0; border-left: 3px solid #3498db;">
+                        <strong>批注（访客可见）：</strong><br>
+                        <div style="
+                            max-height: 150px; 
+                            overflow-y: auto; 
+                            overflow-wrap: anywhere;
+                            word-wrap: break-word; 
+                            word-break: break-all;
+                            margin-top: 8px;
+                            padding-right: 5px;">
+                            {{ appointment.annotation|linebreaksbr }}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- 备注部分 -->
+                    {% if appointment.note %}
+                    <div style="background: #fff8e1; padding: 15px; border-radius: 4px; margin: 10px 0; border-left: 3px solid #f39c12;">
+                        <strong>备注（仅医师可见）：</strong><br>
+                        <div style="
+                            max-height: 150px; 
+                            overflow-y: auto; 
+                            overflow-wrap: anywhere;
+                            word-wrap: break-word; 
+                            word-break: break-all;
+                            margin-top: 8px;
+                            padding-right: 5px;">
+                            {{ appointment.note|linebreaksbr }}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- 操作按钮 -->
+                    <div class="actions">
+                        {% if not appointment.is_responded %}
+                        <button class="btn btn-respond" onclick="openRespondModal({{ appointment.id }})">
+                            回应预约
+                        </button>
+                        {% elif not appointment.is_processed %}
+                        <button class="btn btn-process" onclick="openProcessModal({{ appointment.id }})">
+                            标记为已处理
+                        </button>
+                        {% endif %}
+
+                        {% if appointment.is_processed %}
+                        <form method="post" action="{% url 'doctor_remove_from_pool' appointment.id %}"
+                            style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-remove" onclick="return confirm('确定要从处理池中移除吗？')">
+                                从处理池移除
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+
+                <!-- 分页 -->
+                {% if appointments.has_other_pages %}
+                <div class="pagination">
+                    {% if appointments.has_previous %}
+                    <a class="page-link"
+                        href="?page={{ appointments.previous_page_number }}&filter={{ filter_type }}&search={{ search_query }}">上一页</a>
+                    {% else %}
+                    <span class="page-link disabled">上一页</span>
+                    {% endif %}
+
+                    {% for i in appointments.paginator.page_range %}
+                    {% if i == appointments.number %}
+                    <span class="page-link active">{{ i }}</span>
+                    {% else %}
+                    <a class="page-link" href="?page={{ i }}&filter={{ filter_type }}&search={{ search_query }}">{{ i
+                        }}</a>
+                    {% endif %}
+                    {% endfor %}
+
+                    {% if appointments.has_next %}
+                    <a class="page-link"
+                        href="?page={{ appointments.next_page_number }}&filter={{ filter_type }}&search={{ search_query }}">下一页</a>
+                    {% else %}
+                    <span class="page-link disabled">下一页</span>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+            {% else %}
+            <!-- 空状态 -->
+            <div class="empty-state">
+                {% if search_query %}
+                <i>🔍</i>
+                <h2>没有找到匹配的预约</h2>
+                <p>请尝试其他搜索关键词</p>
+                <button onclick="window.location.href='?filter={{ filter_type }}'">清除搜索</button>
+                {% else %}
+                <i>📭</i>
+                <h2>暂无预约</h2>
+                <p>当前筛选条件下没有预约记录</p>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- 返回顶部按钮 -->
+    <button id="backToTop" title="返回顶部">↑</button>
+
+    <!-- 回应预约模态框 -->
+    <div id="respondModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>回应预约</h3>
+                <button class="close-modal" onclick="closeRespondModal()">×</button>
+            </div>
+            <form method="post" id="respondForm">
+                {% csrf_token %}
+                <input type="hidden" name="appointment_id" id="respondAppointmentId">
+                <input type="hidden" name="respond" value="1">
+
+                <div class="form-group">
+                    <label for="respondPriority">优先级：</label>
+                    <select name="priority" id="respondPriority">
+                        <option value="1">1级</option>
+                        <option value="2">2级</option>
+                        <option value="3">3级</option>
+                        <option value="4" selected>4级</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="respondAnnotation">批注（访客可见）：</label>
+                    <textarea name="annotation" id="respondAnnotation" placeholder="请输入批注内容，访客可以看到"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="respondNote">备注（仅医师可见）：</label>
+                    <textarea name="note" id="respondNote" placeholder="请输入备注内容"></textarea>
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                    <button type="submit" class="btn btn-respond" style="flex: 1;">确认回应</button>
+                    <button type="button" class="btn" onclick="closeRespondModal()" style="flex: 1;">取消</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 处理预约模态框 -->
+    <div id="processModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>处理预约</h3>
+                <button class="close-modal" onclick="closeProcessModal()">×</button>
+            </div>
+            <form method="post" id="processForm">
+                {% csrf_token %}
+                <input type="hidden" name="appointment_id" id="processAppointmentId">
+                <input type="hidden" name="process" value="1">
+
+                <div class="form-group">
+                    <label for="processAnnotation">批注（访客可见）：</label>
+                    <textarea name="annotation" id="processAnnotation" placeholder="请输入批注内容，访客可以看到"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="processNote">备注（仅医师可见）：</label>
+                    <textarea name="note" id="processNote" placeholder="请输入备注内容"></textarea>
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                    <button type="submit" class="btn btn-process" style="flex: 1;">确认处理完成</button>
+                    <button type="button" class="btn" onclick="closeProcessModal()" style="flex: 1;">取消</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // 回应预约模态框
+        function openRespondModal(appointmentId) {
+            document.getElementById('respondAppointmentId').value = appointmentId;
+            document.getElementById('respondModal').style.display = 'block';
+            document.body.style.overflow = 'hidden'; // 防止背景滚动
+        }
+
+        function closeRespondModal() {
+            document.getElementById('respondModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        // 处理预约模态框
+        function openProcessModal(appointmentId) {
+            document.getElementById('processAppointmentId').value = appointmentId;
+            document.getElementById('processModal').style.display = 'block';
+            document.body.style.overflow = 'hidden'; // 防止背景滚动
+        }
+
+        function closeProcessModal() {
+            document.getElementById('processModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        // 点击模态框外部关闭
+        window.onclick = function (event) {
+            const respondModal = document.getElementById('respondModal');
+            const processModal = document.getElementById('processModal');
+            if (event.target === respondModal) {
+                closeRespondModal();
+            }
+            if (event.target === processModal) {
+                closeProcessModal();
+            }
+        }
+
+        // 返回顶部功能
+        const backToTopButton = document.getElementById('backToTop');
+        
+        // 当页面滚动时显示或隐藏按钮
+        window.addEventListener('scroll', function() {
+            if (window.pageYOffset > 300) {
+                backToTopButton.style.display = 'flex';
+            } else {
+                backToTopButton.style.display = 'none';
+            }
+        });
+
+        // 点击按钮返回顶部
+        backToTopButton.addEventListener('click', function() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+
+        // 移动端菜单切换
+        const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+        const sidebar = document.getElementById('sidebar');
+        
+        if (mobileMenuToggle && sidebar) {
+            mobileMenuToggle.addEventListener('click', function() {
+                sidebar.classList.toggle('active');
+            });
+            
+            // 点击菜单外部关闭菜单
+            document.addEventListener('click', function(event) {
+                if (!sidebar.contains(event.target) && !mobileMenuToggle.contains(event.target)) {
+                    sidebar.classList.remove('active');
+                }
+            });
+        }
+
+        // 自动刷新数据（每30秒检查一次是否有新预约）
+        setInterval(function () {
+            // 只在没有搜索条件且不是处理中状态时刷新
+            if (!window.location.search.includes('search=') &&
+                !document.getElementById('respondModal').style.display === 'block' &&
+                !document.getElementById('processModal').style.display === 'block') {
+                // 检查页面是否需要刷新
+                fetch(window.location.href, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                    .then(response => response.text())
+                    .then(html => {
+                        // 简单检查页面是否有变化，如果有变化则刷新
+                        if (html.includes('appointment-item')) {
+                            // 可以在这里添加更精细的DOM更新逻辑
+                            // 现在先简单刷新
+                            window.location.reload();
+                        }
+                    });
+            }
+        }, 30000); // 30秒
+
+        // 添加键盘快捷键
+        document.addEventListener('keydown', function (event) {
+            // Escape 键关闭模态框
+            if (event.key === 'Escape') {
+                closeRespondModal();
+                closeProcessModal();
+            }
+            // Ctrl + F 聚焦搜索框
+            if (event.ctrlKey && event.key === 'f') {
+                event.preventDefault();
+                document.querySelector('input[name="search"]').focus();
+            }
+        });
+
+        // 页面加载时添加动画效果
+        document.addEventListener('DOMContentLoaded', function () {
+            const items = document.querySelectorAll('.appointment-item');
+            items.forEach((item, index) => {
+                item.style.animationDelay = `${index * 0.05}s`;
+                item.style.animation = 'fadeIn 0.5s ease-out forwards';
+                item.style.opacity = 0;
+            });
+        });
+    </script>
+</body>
+</html>

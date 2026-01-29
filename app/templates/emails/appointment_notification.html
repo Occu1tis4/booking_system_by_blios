@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #9b59b6;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+        }
+        .content {
+            background-color: #f9f9f9;
+            padding: 30px;
+            border-radius: 0 0 8px 8px;
+            border: 1px solid #ddd;
+            border-top: none;
+        }
+        .appointment-details {
+            background-color: white;
+            padding: 20px;
+            border-radius: 6px;
+            margin: 20px 0;
+            border-left: 4px solid #3498db;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin: 5px;
+        }
+        .status-new { background: #f39c12; color: white; }
+        .status-responded { background: #3498db; color: white; }
+        .status-processed { background: #2ecc71; color: white; }
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+        }
+        .info-item {
+            margin: 10px 0;
+        }
+        .info-label {
+            font-weight: bold;
+            color: #555;
+            display: inline-block;
+            width: 100px;
+        }
+        .annotation-box {
+            background-color: #e8f4f8;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+            border-left: 3px solid #3498db;
+        }
+        .priority-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .priority-1 { background: #4CAF50; color: white; }
+        .priority-2 { background: #ff9800; color: white; }
+        .priority-3 { background: #f44336; color: white; }
+        .priority-4 { background: #9c27b0; color: white; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>
+            {% if action_type == 'responded' %}
+                预约已得到回应
+            {% elif action_type == 'processed' %}
+                预约即将开始处理
+            {% elif action_type == 'urge_processed' %}
+                催单已处理
+            {% else %}
+                预约状态更新
+            {% endif %}
+        </h1>
+    </div>
+    
+    <div class="content">
+        <p>尊敬的缥缈旅之客，您好：</p>
+        
+        <p>您的预约状态已更新：</p>
+        
+        <div class="appointment-details">
+            <h3>预约详情</h3>
+            
+            <div class="info-item">
+                <span class="info-label">预约人：</span>
+                {{ appointment.patient_name }}
+            </div>
+            
+            <div class="info-item">
+                <span class="info-label">微信号：</span>
+                {{ appointment.wechat_id }}
+            </div>
+            
+            <div class="info-item">
+                <span class="info-label">优先级：</span>
+                <span class="priority-badge priority-{{ appointment.priority }}">
+                    {{ appointment.get_priority_display }}
+                </span>
+            </div>
+            
+            <div class="info-item">
+                <span class="info-label">创建时间：</span>
+                {{ appointment.created_at|date:"Y-m-d H:i" }}
+            </div>
+            
+            <div class="info-item">
+                <span class="info-label">当前状态：</span>
+                {% if appointment.is_processed %}
+                    <span class="status-badge status-processed">已处理</span>
+                {% elif appointment.is_responded %}
+                    <span class="status-badge status-responded">已回应</span>
+                {% else %}
+                    <span class="status-badge status-new">待回应</span>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="info-item">
+            <strong>需求描述：</strong><br>
+            <pre style="background: #f5f5f5; padding: 15px; border-radius: 4px; white-space: pre-wrap;">{{ appointment.demand }}</pre>
+        </div>
+        
+        {% if annotation %}
+        <div class="annotation-box">
+            <strong>📝 伯里欧斯的批注：</strong><br>
+            <p>{{ annotation|linebreaks }}</p>
+        </div>
+        {% endif %}
+        
+        <div style="margin: 25px 0; padding: 20px; background: #f8f9fa; border-radius: 6px;">
+            <h4>💡 温馨提示</h4>
+            <p>
+                {% if action_type == 'responded' %}
+                    您的预约已得到伯里欧斯的回应。可以访问预约网站查看排队进度并催单。<br>
+                    如需进一步沟通，请通过微信（Hypnocculsis）与伯里欧斯联系。
+                {% elif action_type == 'processed' %}
+                    您的预约即将开始处理，感谢您的耐心等待。<br>
+                    请您及时微信联系伯里欧斯（Hypnocculsis），逾期一天将视为放弃。
+                {% elif action_type == 'urge_processed' %}
+                    您的催单请求已得到处理，伯里欧斯已更新预约信息。<br>
+                    感谢您的理解与配合。
+                {% endif %}
+            </p>
+        </div>
+        
+        <div class="footer">
+            <p>此邮件由伯里欧斯的小助手自动发送，请勿直接回复。</p>
+            <p>如有问题，请联系伯里欧斯。</p>
+            <p>© {{ site_name }} - {{ now|date:"Y" }}</p>
+        </div>
+    </div>
+</body>
+</html>
